@@ -68,6 +68,8 @@ Run a security script to remove some insecure default settings and lock down acc
 
 Test if you’re able to log in to the MySQL console
 
+> **sudo mysql -p**
+
 ![MyQL still works!](https://github.com/stlng1/stlng-pbl/blob/main/ec2_mysql_2.png)
 
 Exit the MySQL console
