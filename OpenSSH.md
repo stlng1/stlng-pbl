@@ -1,4 +1,4 @@
-# Installing the OpenSSH using Chocolatey
+# Installing the OpenSSH in Windows 10 using Chocolatey
 
 This is an option of installing OpenSSH on windows 10 when it is not installed by default.
 Chocolatey is a software management solution unlike any you've ever experienced on Windows. It allows you to write your deployment once for any software, then deploy it with any solution everywhere you have Windows.
