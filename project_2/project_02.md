@@ -6,7 +6,7 @@
 > 2. use exisitng keypair
 > 3. use existing security group **launch-wizard-1**
 
-![ubuntu ec2 Darey_Projects_02 instance](https://user-images.githubusercontent.com/101927258/174434622-7757a32d-dea5-4d8c-abca-fcdd5844fb5c.png)
+![ubuntu ec2 Darey_Projects_02 instance](./images/ec2_aws_2.png)
 
 ## **Connecting to EC2 terminal**
 
@@ -44,7 +44,7 @@ Test how our nginx HTTP server respond to requests from the Internet browser
 
 If you see following page, then your web server is now correctly installed and accessible through your firewall.
 
-![Welcome to nginx!](https://user-images.githubusercontent.com/101927258/174434809-ca929831-0d71-46af-bf61-6d2cef027ed5.png)
+![Welcome to nginx!](./images/ec2_nginx_1.png)
 
 ## **Installing MySQL**
 
@@ -72,7 +72,7 @@ Test if you’re able to log in to the MySQL console
 
 ```sudo mysql -p```
 
-![MySQL works!](https://user-images.githubusercontent.com/101927258/174434855-1ef16111-281c-4a68-837f-8aef8e8d560b.png)
+![MySQL works!](./images/ec2_mysql_1.png)
 
 Exit the MySQL console
 
@@ -144,7 +144,7 @@ Test your configuration for syntax errors by typing:
 
 You shall see following message:
 
-![Configuration file is ok](https://user-images.githubusercontent.com/101927258/174434901-a57abe66-a2e1-4a91-aa22-13fb0347123b.png)
+![Configuration file is ok](./images/ec2_nginx_2.png)
 
 We also need to disable default Nginx host that is currently configured to listen on port 80:
 
@@ -162,7 +162,7 @@ Now go to your browser and try to open your website URL using IP address:
 
 ```http://<Public-IP-Address>:80```
 
-![server configuration is ok](https://user-images.githubusercontent.com/101927258/174434935-ba3b2d9a-99f0-41c4-9856-9c844a626d03.png)
+![server configuration is ok](./images/ec2_nginx_3.png)
 
 You can also access your website in your browser by public DNS name and the result must be the same (port is optional)
 
@@ -192,7 +192,7 @@ You can now access this page in your web browser by visiting the domain name or 
 
 ```http://`server_domain_or_IP`/info.php```
 
-![You will see a web page containing detailed information about your server](https://user-images.githubusercontent.com/101927258/174434969-4e05c105-fb7a-4498-9451-02f02202b398.png)
+![You will see a web page containing detailed information about your server](./images/ec2_nginx_4.png)
 
 After checking the relevant information about your PHP server through that page, it’s best to remove the file you created as it contains sensitive information about your PHP environment and your Ubuntu server. You can always regenerate this file if you need it later
 
@@ -236,7 +236,7 @@ Notice the -p flag in this command, which will prompt you for the password used 
 
 ```SHOW DATABASES;```
 
-![show database output](https://user-images.githubusercontent.com/101927258/174435016-89c04d51-fa4e-4923-a1ea-a5ae76474008.png)
+![show database output](./images/ec2_mysql_2.png)
 
 Next, we’ll create a test table named **todo_list**. From the MySQL console, run the following statement:
 
@@ -269,7 +269,7 @@ To confirm that the data was successfully saved to your table, run:
 
 You’ll see the following output:
 
-![valid data confirmed](https://user-images.githubusercontent.com/101927258/174435034-c4180aa2-c387-4062-bad4-9db5cdf7c29b.png)
+![valid data confirmed](./images/ec2_mysql_3.png)
 
 After confirming that you have valid data in your test table, you can exit the MySQL console:
 
@@ -314,6 +314,6 @@ You can now access this page in your web browser by visiting the domain name or 
 
 ```http://<Public_domain_or_IP>/todo_list.php```
 
-![You should see a page like this, showing the content you’ve inserted in your test table](https://user-images.githubusercontent.com/101927258/174435239-84013543-bf99-4bfc-93aa-a1a7d88d2909.png)
+![You should see a page like this, showing the content you’ve inserted in your test table](./images/ec2_php_1.png)
 
 Your PHP environment is ready to connect and interact with your MySQL server.

@@ -4,7 +4,7 @@
 1. register AWS account
 2. create Darey_Projects_01 instance of ubuntu server
 
-![ubuntu ec2 instance](https://github.com/stlng1/stlng-pbl/blob/main/aws_ec2_instance.jpg)
+![ubuntu ec2 instance](./images/aws_ec2_instance.jpg)
 
 ## **Connecting to EC2 terminal**
 
@@ -12,7 +12,7 @@ Connect to EC2 terminal using the git bash from folder containing my private key
 
 >**ssh -i femmy_ec2.pem ubuntu@13.38.85.104:80**
   
-![connect to ec2 instance](https://github.com/stlng1/stlng-pbl/blob/main/ec2_connect.png)
+![connect to ec2 instance](./images/ec2_connect.png)
 
 ## **Installing Apache**
 
@@ -30,7 +30,7 @@ Verify that apache2 is running as a Service in our OS
 
 Add a rule to EC2 configuration to open inbound connection through port 80
 
-![New inbound connection through port 80 rule](https://github.com/stlng1/stlng-pbl/blob/main/ec2_apache.png)
+![New inbound connection through port 80 rule](./images/ec2_apache.png)
 
 Check Apache access locally in our Ubuntu shell
 
@@ -40,7 +40,7 @@ Test how our Apache HTTP server respond to requests from the Internet browser
 
 >**http://13.38.85.104:80**
 
-![Apache server works!](https://github.com/stlng1/stlng-pbl/blob/main/ec2_apache2.png)
+![Apache server works!](./images/ec2_apache2.png)
 
 ## **Install MySQL**
 
@@ -52,7 +52,7 @@ Log in to the MySQL console
 
 > **sudo mysql**
 
-![MyQL works!](https://github.com/stlng1/stlng-pbl/blob/main/ec2_mysql_1.png)
+![MyQL works!](./images/ec2_mysql_1.png)
 
 Set a password for the root user, using mysql_native_password as default authentication method
 
@@ -70,7 +70,7 @@ Test if you’re able to log in to the MySQL console
 
 > **sudo mysql -p**
 
-![MyQL still works!](https://github.com/stlng1/stlng-pbl/blob/main/ec2_mysql_2.png)
+![MyQL still works!](./images/ec2_mysql_2.png)
 
 Exit the MySQL console
 
@@ -86,7 +86,7 @@ To confirm PHP version
 
 > **php -v**
 
-![PHP version 8.1.2](https://github.com/stlng1/stlng-pbl/blob/main/ec2_php_1.png)
+![PHP version 8.1.2](./images/ec2_php_1.png)
 
 LAMP stack is completely installed and fully operational
 
@@ -159,7 +159,7 @@ Go to your browser and try to open your website URL using IP address:
 
 > **http://52.47.159.82:80**
   
-![Apache virtual host is working as expected](https://github.com/stlng1/stlng-pbl/blob/main/ec2_lamp_1.png)
+![Apache virtual host is working as expected](./images/ec2_lamp_1.png)
 
 ## **ENABLE PHP ON THE WEBSITE**
   
@@ -185,7 +185,7 @@ Go to your browser and try to open your website URL using IP address:
 
 > **http://52.47.159.82:80**
 
-![PHP installation is working as expected](https://github.com/stlng1/stlng-pbl/blob/main/ec2_php_2.png)
+![PHP installation is working as expected](./images/ec2_php_2.png)
 
 After checking the relevant information about your PHP server through that page, it’s best to remove the file you created as it contains sensitive information about your PHP environment -and your Ubuntu server
 
