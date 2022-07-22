@@ -4,7 +4,9 @@ TASK – Implement a Client Server Architecture using MySQL Database Management 
 To demonstrate a basic client-server using MySQL Relational Database Management System (RDBMS), follow the below instructions
 
 Create and configure two Linux-based virtual servers (EC2 instances in AWS).
+
 Server A name - `mysql server`
+
 Server B name - `mysql client`
 
 ![EC2 instances in AWS](./images/ec2_aws_1.png)
@@ -24,7 +26,7 @@ After successful installation of mysql-server, we can check the MySQL version by
 
 ```mysql --version```
 
-mysql  Ver 8.0.29 installed succesfully.
+*mysql  Ver 8.0.29 installed succesfully.*
 
 ## Configure MySQL Installation
 
@@ -60,7 +62,7 @@ Use the below command to login into MySQL:
 
 ```sudo mysql -p```
 
-*In case you experience the following error while connecting*
+*In case you experience the following error while trying to login -*
 
 >ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)```
 
@@ -102,7 +104,7 @@ You can also create a user that can connect from any machine with the command:
 
 >CREATE USER 'username'@'%' IDENTIFIED BY 'password';
 
-To create a user named 'pretty' that  that can connect from anywhere, use the string below
+To create a user named 'pretty' that can connect from anywhere, use the string below
 
 ```CREATE USER 'pretty'@'%' IDENTIFIED BY 'pretty';```
 
