@@ -6,11 +6,11 @@
 
 Launch an EC2 instance that will serve as "Web Server". Create 3 volumes in the same AZ as your Web Server EC2, each of 10 GiB.
 
-![EC2 instances in AWS](ec2_aws_1.png)
+![EC2 instances in AWS](./images/ec2_aws_1.png)
 
 Add EBS Volume to an EC2 instance here
 
-![EBS volume in AWS](ec2_aws_2.png)
+![EBS volume in AWS](./images/ec2_aws_2.png)
 
 Attach all three volumes one by one to your Web Server EC2 instance
 
@@ -30,14 +30,14 @@ Use df -h command to see all mounts and free space on your server
 
 ```df -h```
 
-![checking attached volumes](./ec2_disk_1.png)
+![checking attached volumes](./images/ec2_disk_1.png)
 
 
 Use gdisk utility to create a single partition on each of the 3 disks
 
 ```sudo gdisk /dev/xvdf```
 
-![creating partition on xvdf](./ec2_disk_2.png)
+![creating partition on xvdf](./images/ec2_disk_2.png)
 
 Now, your changes has been configured succesfully, do the same for the remaining disks.
 
@@ -47,7 +47,7 @@ Now, your changes has been configured succesfully, do the same for the remaining
 
 Use *lsblk* utility to view the newly configured partition on each of the 3 disks.
 
-![view newly configured partition](./ec2_disk_3.png)
+![view newly configured partition](./images/ec2_disk_3.png)
 
 Install lvm2 package 
 
@@ -59,7 +59,7 @@ check for available partitions, run:
 
 ```sudo lvmdiskscan```
 
-![checking for available partitions](./ec2_disk_4.png)
+![checking for available partitions](./images/ec2_disk_4.png)
 
 
 Use *pvcreate* utility to mark each of 3 disks as physical volumes (PVs) to be used by LVM
@@ -74,7 +74,7 @@ Verify that your Physical volume has been created successfully, run:
 
 ```sudo pvs```
 
-![verify physical volume](./ec2_disk_5.png)
+![verify physical volume](./images/ec2_disk_5.png)
 
 Use vgcreate utility to add all 3 PVs to a volume group (VG). Name the VG webdata-vg
 
@@ -84,7 +84,7 @@ Verify that your VG has been created successfully, run:
 
 ```sudo vgs```
 
-![create volume group](./ec2_disk_6.png)
+![create volume group](./images/ec2_disk_6.png)
 
 Use lvcreate utility to create 2 logical volumes. apps-lv (Use half of the PV size), and logs-lv Use the remaining space of the PV size. 
 
@@ -98,7 +98,7 @@ Verify that your Logical Volume has been created successfully. Run:
 
 ```sudo lvs```
 
-![verify logical volume](./ec2_disk_7.png)
+![verify logical volume](./images/ec2_disk_7.png)
 
 Verify the entire setup
 
@@ -106,7 +106,7 @@ Verify the entire setup
 
 ```sudo lsblk```
 
-![verify logical volume](./ec2_disk_8.png)
+![verify logical volume](./images/ec2_disk_8.png)
 
 Use mkfs.ext4 to format the logical volumes with ext4 filesystem
 
@@ -149,13 +149,13 @@ To extract the UUID of the device, run:
 
 ```sudo blkid```
 
-![device UUID](./ec2_disk_9.png)
+![device UUID](./images/ec2_disk_9.png)
 
 To replace the UUID of the /etc/fstab file, run:
 
 ```sudo vi /etc/fstab```
 
-![replace fstab file UUID](./ec2_disk_10.png)
+![replace fstab file UUID](./images/ec2_disk_10.png)
 
 Update */etc/fstab* in the format shown above using your own UUID and remember to remove the leading and ending quotes.
 
@@ -171,7 +171,7 @@ Verify your setup. Run:
 
 output must look like this:
 
-![new configuration](./ec2_disk_11.png)
+![new configuration](./images/ec2_disk_11.png)
 
 # Prepare the Database Server
 Launch a second RedHat EC2 instance named **Dbase** that will have a Database Server role.
@@ -179,7 +179,7 @@ Repeat the same steps as for the Web Server, but instead of apps-lv create db-lv
 
 Add 10GB EBS Volume to an Dbase EC2 instance
 
-![Dbase instance in AWS](ec2_aws_1.png)
+![Dbase instance in AWS](./images/ec2_aws_1.png)
 
 Attach all three volumes one by one to your Dbase EC2 instance
 
@@ -217,7 +217,7 @@ check for available partitions, run:
 
 ```sudo lvmdiskscan```
 
-![checking for available partitions](./ec2_disk_4.png)
+![checking for available partitions](./images/ec2_disk_4.png)
 
 
 Use *pvcreate* utility to mark each of 3 disks as physical volumes (PVs) to be used by LVM
@@ -258,7 +258,7 @@ Verify the entire setup
 
 ```sudo lsblk```
 
-![verify logical volume](./ec2_disk2_1.png)
+![verify logical volume](./images/ec2_disk2_1.png)
 
 Use mkfs.ext4 to format the logical volumes with ext4 filesystem
 
@@ -318,7 +318,7 @@ Verify your setup, run:
 
 output must look like this:
 
-![new configuration](./ec2_disk2_2.png)
+![new configuration](./images/ec2_disk2_2.png)
 
 ## Install WordPress on your Web Server EC2
 
@@ -446,7 +446,7 @@ set user permissions
 
 Open MySQL port 3306 to inbound traffic on DB Server EC2. For extra security, you should allow access to the DB server ONLY from your Web Server’s IP address, so in the Inbound Rule configuration specify source as /32
 
-![new security configuration](./ec2_aws_3.png)
+![new security configuration](./images/ec2_aws_3.png)
 
 Install MySQL client on the webserver and test that you can connect from your Web Server to your DB server.
 
@@ -460,7 +460,7 @@ login to mysql client as admin or root user
 
 Verify if you can successfully execute SHOW DATABASES; command and see a list of existing databases.
 
-![databases](./ec2_disk_12.png)
+![databases](./images/ec2_disk_12.png)
 
 ## Change permissions and configuration so Apache could use WordPress:
 
@@ -470,19 +470,19 @@ To update the configuration, run:
 
 ```sudo vi /var/www/html/wordpress/wp-config.php```
 
-![wp-config.php file](./ec2_disk_13.png)
+![wp-config.php file](./images/ec2_disk_13.png)
 
 Enable TCP port 80 in Inbound Rules configuration for your Web Server EC2 (enable from everywhere 0.0.0.0/0 or from your workstation’s IP)
 
 Try to access from your browser the link to your WordPress http://<Web-Server-Public-IP-Address>/wordpress/
 
-![wordpress browser](./ec2_browse_1.png)
+![wordpress browser](./images/ec2_browse_1.png)
 
 Fill out your DB credentials:
 
-![wordpress browser](./ec2_browse_2.png)
+![wordpress browser](./images/ec2_browse_2.png)
 
-![wordpress browser](./ec2_browse_3.png)
+![wordpress browser](./images/ec2_browse_3.png)
 
 CONGRATULATIONS!
 we have configured Linux storage susbystem and have also deployed a full-scale Web Solution using WordPress CMS and MySQL RDBMS!
