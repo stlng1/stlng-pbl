@@ -1,6 +1,6 @@
 # **WEB STACK IMPLEMENTATION (LEMP STACK)**
 
-## **AWS account setup and Provisioning and Ubuntu Server**
+## AWS account setup and Provisioning and Ubuntu Server
 
 > 1. Create **Darey_Projects_02** instance of ubuntu server
 > 2. use exisitng keypair
