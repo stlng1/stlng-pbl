@@ -23,7 +23,6 @@ In this assignment you are going to implement a simple Book Register web form us
 
 > 4. Connect to EC2 terminal using the powershell terminal from folder containing my private key
 
-
 # Install NodeJs
 
 Node.js is a JavaScript runtime built on Chrome’s V8 JavaScript engine. Node.js is used in this tutorial to set up the Express routes and AngularJS controllers.
