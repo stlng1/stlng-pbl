@@ -26,7 +26,7 @@ Connect to EC2 terminal using the git bash terminal from folder containing my pr
 
 ```ssh -i "femmy_EC2.pem" ubuntu@ec2-52-47-193-222.eu-west-3.compute.amazonaws.com```
 
-# **BACKEND CONFIGURATION**
+# BACKEND CONFIGURATION
 
 Update ubuntu
 
