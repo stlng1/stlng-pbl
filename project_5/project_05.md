@@ -182,6 +182,4 @@ Check that you have successfully connected to a remote MySQL server and can perf
 
 ![show databases](./images/ec2_mysql_4.png)
 
-
-
-Congratulations! – you have deloyed a fully functional MySQL Client-Server set up.
+Congratulations! – you have deloyed a fully functional MySQL Client-Server set up. 
