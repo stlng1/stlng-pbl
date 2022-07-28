@@ -1,6 +1,6 @@
 # **WEB STACK IMPLEMENTATION (LAMP STACK) IN AWS**
 
-## **AWS account setup and Provisioning and Ubuntu Server**
+## AWS account setup and Provisioning and Ubuntu Server
 1. register AWS account
 2. create Darey_Projects_01 instance of ubuntu server
 
@@ -153,6 +153,7 @@ Finally, reload Apache so these changes take effect:
 > **sudo systemctl reload apache2**
 
 Your new website is now active, but the web root /var/www/projectlamp is still empty. Create an index.html file in that location so that we can test that the virtual host works as expected:
+
 sudo echo 'Hello LAMP from hostname' $(curl -s http://169.254.169.254/latest/meta-data/public-hostname) 'with public IP' $(curl -s http://169.254.169.254/latest/meta-data/public-ipv4) > /var/www/projectlamp/index.html
 
 Go to your browser and try to open your website URL using IP address:
