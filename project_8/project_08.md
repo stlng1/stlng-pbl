@@ -113,4 +113,4 @@ Now your set up looks like this:
 
 ![LB Architecture](./images/p8_web_3.png)
 
-Congratulations!
+Congratulations!!
