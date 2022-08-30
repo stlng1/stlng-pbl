@@ -110,14 +110,14 @@ Now we have our artifacts saved locally on Jenkins server, the next step is to c
 
 Jenkins is a highly extendable application and there are 1400+ plugins available. We will need a plugin that is called *"Publish Over SSH".*
 
-## Install "Publish Over SSH" plugin.
+### Install "Publish Over SSH" plugin.
 On main dashboard select "Manage Jenkins" and choose "Manage Plugins" menu item.
 
 On "Available" tab search for "Publish Over SSH" plugin and install it
 
 ![jenkins configuration](./images/p9_web_10a.png)
 
-## Configure the job/project to copy artifacts over to NFS server.
+### Configure the job/project to copy artifacts over to NFS server.
 
 On main dashboard select "Manage Jenkins" and choose "Configure System" menu item.
 
