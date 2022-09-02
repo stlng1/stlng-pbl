@@ -383,7 +383,7 @@ Next, locate the log folder for Apache on the Web Server, */var/log/* and mount 
 >
 >```sudo rsync -av /var/log/. /home/recovery/logs/```
 
-7. ount */var/log/* to NFS server’s */mnt/logs/*
+7. mount */var/log/* to NFS server’s */mnt/logs/*
 (Note that all the existing data on /var/log will be deleted. That is why the backup step above is very important)
 
 ```sudo mount -t nfs -o rw,nosuid <NFS-Server-Private-IP-Address>:/mnt/logs /var/log```
