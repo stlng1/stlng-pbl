@@ -56,7 +56,7 @@ Restart apache server
 
 ```sudo systemctl restart apache2```
 
-![LB configuration](./images/p8_tml_1.png)
+![LB configuration](./images/p8_TML_1.png)
 
 *bytraffic* balancing method will distribute incoming load between your Web Servers according to current traffic load. We can control in which proportion the traffic must be distributed by loadfactor parameter.
 
@@ -88,7 +88,7 @@ Note: If in the Project-7 you mounted /var/log/httpd/ from your Web Servers to t
 >   .
 
 
-![verify unmount](./images/p8_tml_2.png)
+![verify unmount](./images/p8_TML_2.png)
 
 Open ssh/Putty consoles for each of the two Web Servers and run following command:
 
@@ -100,10 +100,10 @@ http://```<Load-Balancer-Public-IP-Address-or-Public-DNS-Name>/index.php```
 
  The number of requests to each server will be approximately the same since we set loadfactor to the same value for both servers – it means that traffic will be distributed evenly between them. If you have configured everything correctly – your users will not even notice that their requests are served by more than one server.
 
-![web1](./images/p8_tml_4.png)
+![web1](./images/p8_TML_4.png)
 Project7-Web1
 
-![web2](./images/p8_tml_3.png)
+![web2](./images/p8_TML_3.png)
 Project7-Web2
 
 If you have configured everything correctly – your users will not even notice that their requests are served by more than one server.
