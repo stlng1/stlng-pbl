@@ -4,13 +4,13 @@
 
 Spin up a new EC2 instance with RHEL Linux 8 Operating System.
 
-![EC2 instances in AWS](./images/p7_aws_1.png)
+![EC2 instances in AWS](./images/ec2_aws_1.png)
 
 ## Configure LVM on the Server.
 
 Add EBS Volume to an EC2 instance here
 
-![EBS volume in AWS](./images/p7_aws_2.png)
+![EBS volume in AWS](./images/P7_aws_2.png)
 
 Attach all two volumes one by one to your Web Server EC2 instance
 
