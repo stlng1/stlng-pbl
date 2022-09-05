@@ -4,7 +4,7 @@
 
 Spin up a new EC2 instance with RHEL Linux 8 Operating System.
 
-![EC2 instances in AWS](./images/ec2_aws_1.png)
+![EC2 instances in AWS](./images/P7_aws_1.png)
 
 ## Configure LVM on the Server.
 
@@ -30,14 +30,14 @@ Use df -h command to see all mounts and free space on your server
 
 ```df -h```
 
-![checking attached volumes](./images/p7_LVM_1.png)
+![checking attached volumes](./images/P7_LVM_1.png)
 
 
 Use gdisk utility to create a single partition on each of the 2 disks
 
 ```sudo gdisk /dev/xvdf```
 
-![creating partitions](./images/p7_LVM_2.png)
+![creating partitions](./images/P7_LVM_2.png)
 
 
 Now, your changes has been configured succesfully, do the same for the remaining disks.
@@ -46,7 +46,7 @@ Now, your changes has been configured succesfully, do the same for the remaining
 
 Use *lsblk* utility to view the newly configured partition on each of the 2 disks.
 
-![checking attached volumes](./images/p7_LVM_3.png)
+![checking attached volumes](./images/P7_LVM_3.png)
 
 
 Install lvm2 package 
@@ -59,7 +59,7 @@ check for available partitions, run:
 
 ```sudo lvmdiskscan```
 
-![checking partitions](./images/p7_LVM_4.png)
+![checking partitions](./images/P7_LVM_4.png)
 
 
 Use *pvcreate* utility to mark each of 2 disks as physical volumes (PVs) to be used by LVM
@@ -72,7 +72,7 @@ Verify that your Physical volume has been created successfully, run:
 
 ```sudo pvs```
 
-![verify physical volume](./images/p7_LVM_5.png)
+![verify physical volume](./images/P7_LVM_5.png)
 
 Use vgcreate utility to add all 2 PVs to a volume group (VG). Name the VG webdata-vg
 
@@ -82,7 +82,7 @@ Verify that your VG has been created successfully, run:
 
 ```sudo vgs```
 
-![create volume group](./images/p7_LVM_6.png)
+![create volume group](./images/P7_LVM_6.png)
 
 Use lvcreate utility to create 3 logical volumes. lv-opt (5Gb), lv-apps (5Gb), and lv-logs (use up the remaining space of the PV size). 
 
@@ -98,7 +98,7 @@ Verify that your Logical Volume has been created successfully. Run:
 
 ```sudo lvs```
 
-![verify logical volume](./images/p7_LVM_7.png)
+![verify logical volume](./images/P7_LVM_7.png)
 
 Verify the entire setup
 
@@ -106,7 +106,7 @@ Verify the entire setup
 
 ```sudo lsblk```
 
-![verify logical volume](./images/p7_LVM_8.png)
+![verify logical volume](./images/P7_LVM_8.png)
 
 Use mkfs.xfs to format the logical volumes with xfs filesystem
 
@@ -150,13 +150,13 @@ To extract the UUID of the device, run:
 
 ```sudo blkid```
 
-![device UUID](./images/p7_LVM_9.png)
+![device UUID](./images/P7_LVM_9.png)
 
 To replace the UUID of the /etc/fstab file, run:
 
 ```sudo vi /etc/fstab```
 
-![replace fstab file UUID](./images/p7_LVM_10.png)
+![replace fstab file UUID](./images/P7_LVM_10.png)
 
 Update */etc/fstab* in the format shown above using your own UUID and remember to remove the leading and ending quotes.
 
@@ -172,7 +172,7 @@ Verify your setup. Run:
 
 output must look like this:
 
-![new configuration](./images/p7_LVM_11.png)
+![new configuration](./images/P7_LVM_11.png)
 
 ## Install NFS Server
 
@@ -190,7 +190,7 @@ Export the mounts for webservers’ subnet CIDR to connect as clients. There wil
 
 To check your subnet CIDR – click on your EC2 instance to open the Subnet ID link:
 
-![subnet CIDR in AWS](./images/p7_aws_4.png)
+![subnet CIDR in AWS](./images/P7_aws_4.png)
 
 Make sure we set up permission that will allow our Web servers to read, write and execute files on NFS:
 
@@ -220,7 +220,7 @@ Configure access to NFS for clients within the same subnet by editing *exports* 
 /mnt/opt <Subnet-CIDR>(rw,sync,no_all_squash,no_root_squash)
 ```
 
-![exports file configuration](./images/p7_LVM_12.png)
+![exports file configuration](./images/P7_LVM_12.png)
 
 test exports file 
 
@@ -230,13 +230,13 @@ Check which port is used by NFS and open it using Security Groups (add new Inbou
 
 ```rpcinfo -p | grep nfs```
 
-![check ports](./images/p7_LVM_13.png)
+![check ports](./images/P7_LVM_13.png)
 
 Important note: In order for NFS server to be accessible from your client, you must also open following ports: TCP 111, UDP 111, UDP 2049
 
 create a new security group in your EC2 instance to allow in-bound traffic in the listed ports.
 
-![EC2 security group](./images/p7_AWS_3a.png)
+![EC2 security group](./images/P7_aws_3a.png)
 
 # Prepare and Configure Database Server
 
@@ -244,7 +244,7 @@ create a new security group in your EC2 instance to allow in-bound traffic in th
 
 Spin up a new EC2 instance with Linux Ubuntu 22.04 Operating System.
 
-![EC2 instances in AWS](./images/p7_aws_5.png)
+![EC2 instances in AWS](./images/P7_aws_5.png)
 
 ## Install MySQL server
 
@@ -296,7 +296,7 @@ Grant permission to *webaccess* user on *tooling* database to do anything only f
 
 ```exit```
 
-![check ports](./images/p7_LVM_14.png)
+![check ports](./images/P7_LVM_14.png)
 
 
 # Prepare and Configure Webservers
@@ -313,7 +313,7 @@ This approach will make our Web Servers *stateless*, which means we will be able
 
 1. Launch new EC2 instances with RHEL 8 Operating System
 
-![AWS RHEL Instance](./images/p7_AWS_6.png)
+![AWS RHEL Instance](./images/P7_aws_6.png)
 
 2. Install NFS client
 
@@ -329,7 +329,7 @@ This approach will make our Web Servers *stateless*, which means we will be able
 
 ```df -h```
 
-![NFS mount verification](./images/p7_LVM_15.png)
+![NFS mount verification](./images/P7_LVM_15.png)
 
 5. To make sure that the changes will persist on Web Server after reboot, edit fstab file:
 
@@ -339,7 +339,7 @@ add following line
 
 ```<NFS-Server-Private-IP-Address>:/mnt/apps /var/www nfs defaults 0 0```
 
-![edit fstab file](./images/p7_LVM_16.png)
+![edit fstab file](./images/P7_LVM_16.png)
 
 6. Install Remi’s repository, Apache and PHP
 
@@ -365,11 +365,11 @@ sudo setsebool -P httpd_execmem 1
 
 Verify that Apache files and directories are available on the Web Server in /var/www 
 
-![verify NFS mount](./images/p7_LVM_18.png)
+![verify NFS mount](./images/P7_LVM_18.png)
 
 and also on the NFS server in /mnt/apps. 
 
-![verify NFS mount](./images/p7_LVM_17.png)
+![verify NFS mount](./images/P7_LVM_17.png)
 
 If you see the same files as in the images above, it means NFS is mounted correctly. 
 
@@ -408,7 +408,7 @@ to make sure the mount point will persist after reboot.
 
 Fork the tooling source code from Darey.io Github Account to your Github account. 
 
-![fork tooling source code](./images/p7_img_1.png)
+![fork tooling source code](./images/P7_img_1.png)
 
 Deploy the tooling website’s code to the Webserver as *root* user. Ensure that the html folder from the repository is deployed to /var/www/html. Note that this does not have to be repeated on other servers since the directory is shared.
 
@@ -416,7 +416,7 @@ Deploy the tooling website’s code to the Webserver as *root* user. Ensure that
 
 ```sudo git clone <git-repository-url>```
 
-![git repo url](./images/p7_img_2.png)
+![git repo url](./images/P7_img_2.png)
 ```
 
 Notes
@@ -457,7 +457,7 @@ then, delete html directory
 
 Open MySQL port 3306 to inbound traffic on DB Server EC2. For extra security, you should allow access to the DB server ONLY from your Web Server’s security group as shown in the image below.
 
-![new security configuration](./images/p7_aws_7.png)
+![new security configuration](./images/P7_aws_7.png)
 
 configure database server to allow connections from remote hosts.
 
@@ -465,7 +465,7 @@ configure database server to allow connections from remote hosts.
 
 Replace ‘127.0.0.1’ to ‘0.0.0.0’ like this:
 
-![edit mysqld.cnf](./images/p7_LVM_19.png)
+![edit mysqld.cnf](./images/P7_LVM_19.png)
 
 restart server
 
@@ -497,7 +497,7 @@ Verify if you can successfully executed the command
 
 See a list of existing databases.
 
-![databases](./images/p7_LVM_20.png)
+![databases](./images/P7_LVM_20.png)
 
 ## Update the website’s configuration
 
@@ -505,7 +505,7 @@ Update the website’s configuration to connect to the database; edit /var/www/h
 
 ```vi /var/www/html/functions.php```
 
-![edit functions.php](./images/p7_LVM_21.png)
+![edit functions.php](./images/P7_LVM_21.png)
 
 Apply tooling-db.sql script to your database 
 
@@ -523,7 +523,7 @@ Netx, login to mysql
 
 ```select * from users```
 
-![databases & users](./images/p7_img_4.png)
+![databases & users](./images/P7_img_4.png)
 
 Open the website in your browser 
 
@@ -533,13 +533,13 @@ and make sure you can login into the website with 'admin' user and 'admin' passw
 
 Web browser 1
 
-![browser 1](./images/p7_img_5.png)
+![browser 1](./images/P7_img_5.png)
 
 Web browser 2
 
-![browser 2](./images/p7_img_6.png)
+![browser 2](./images/P7_img_6.png)
 
 Web browser 3
 
-![browser 3](./images/p7_img_7.png)
+![browser 3](./images/P7_img_7.png)
 
