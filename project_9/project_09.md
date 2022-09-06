@@ -68,7 +68,9 @@ Go to Jenkins web console, click "New Item" and create a "Freestyle project"
 
 To connect your GitHub repository, you will need to provide its URL, you can copy from the repository itself
 
-In configuration of your Jenkins freestyle project choose Git repository, provide there the link to your Tooling GitHub repository and credentials (user/password) so Jenkins could access files in the repository.
+In configuration of your Jenkins freestyle project choose configure and provide the link to your Tooling GitHub repository and credentials (user/password) for General and Source Code Management tabs as shown below, so Jenkins could access files in the repository.
+
+![jenkins git configuration](./images/p9_web_5a.png)
 
 ![jenkins git configuration](./images/p9_web_5.png)
 
