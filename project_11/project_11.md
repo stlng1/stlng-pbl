@@ -16,9 +16,9 @@ Install Ansible
 
 ```sudo apt install ansible```
 
-Check your Ansible version by running ansible --version
+Check your Ansible version by running 
 
-
+```ansible --version```
 
 Configure Jenkins build job to save your repository content every time you change it – this will solidify your Jenkins configuration skills acquired in Project 9.
 Create a new Freestyle project ansible in Jenkins and point it to your ‘ansible-config-mgt’ repository.
