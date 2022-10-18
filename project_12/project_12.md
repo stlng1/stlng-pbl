@@ -106,7 +106,7 @@ update site.yml with
 ```
 instead of *common.yml* and run it against dev servers:
 
-```cd /home/ubuntu/ansible-config-mgt/```
+```cd /home/ubuntu/ansible-config```
 
 ```ansible-playbook -i inventory/dev.yml playbooks/site.yml```
 
