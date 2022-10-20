@@ -533,9 +533,11 @@ Update both assignments and site.yml files respectively
 Now you can make use of *env-vars/uat.yml* file to define which loadbalancer to use in UAT environment by setting respective environmental variable to true. You can switch between the two LBs by setting respective environmental variable to true and other to false. **In this case, we choose to use apache as our LB**.
 
 when apache is enabled:
+
 ![LB environment](./images/p13_vsc_06.png)
 
 when nginx is enabled:
+
 ![LB environment](./images/p13_vsc_07.png)
 
 To test this, you can update inventory for each environment and run Ansible against each environment.
