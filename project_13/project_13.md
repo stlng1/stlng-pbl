@@ -71,17 +71,21 @@ Update *site.yml* file to make use of the dynamic assignment.
 ```
 ---
 - hosts: all
-- name: Include dynamic variables 
-  tasks:
-  import_playbook: ../static-assignments/common.yml 
-  include: ../dynamic-assignments/env-vars.yml
+  become: true
+- name: Include dynamic variables
+  import_playbook: ../static-assignments/common.yml
+- include: ../dynamic-assignments/env-vars.yml
   tags:
     - always
 
-- hosts: webservers
+- name: delete wireshack installation
+  import_playbook: ../static-assignments/common-del.yml
+
 - name: Webserver assignment
   import_playbook: ../static-assignments/webservers.yml
 ```
+
+![ansible role](./images/p13_cli_07.png)
 
 ## Community Roles
 ---
@@ -211,7 +215,7 @@ We want to be able to choose which Load Balancer to use i.e Nginx or Apache, so 
 
 Our file structures for nginx (nginxRole) will look like this:
 
-![LB role file structure](./images/p13_vsc_04.png)
+![nginx role file structure](./images/p13_vsc_05.png)
 
 Nginx Role: The following files will be created under nginx role
 
@@ -237,6 +241,8 @@ Nginx Role: The following files will be created under nginx role
       dest: "/etc/nginx/nginx.conf"
     notify: reload nginx
 ```
+
+![nginx role](./images/p13_vsc_08.png)
 
 *handlers/main.yml*
 ```
@@ -372,75 +378,77 @@ load_balancer_is_required: false
  web2: <webserver2 private IP>
 ```
 
+![nginx role](./images/p13_vsc_09.png)
+
 ## Installing Apache Role
 
 Our file structure under apache (apacheRole) will look like this:
 
-![LB role file structure](./images/p13_vsc_05.png)
+![LB role file structure](./images/p13_vsc_04.png)
 
 *tasks/main.yml*
 ```
 ---
 - name: Install prerequisites
+  become: true
   apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes
   loop: [ 'aptitude' ]
 
 - name: Install Apache
+  become: true
   apt: name=apache2 update_cache=yes state=latest
 
 - name: Install apache dependencies
+  become: true
   apt: name=libxml2-dev state=present
   notify: Reload Apache
 
 - name: enable apache dependencies
+  become: true
   apache2_module: name={{ item }} state=present
   with_items:
-    - rewrite
-    - proxy
-    - proxy_balancer
-    - proxy_http
-    - headers
-    - lbmethod_bytraffic
+  - rewrite
+  - proxy
+  - proxy_balancer
+  - proxy_http
+  - headers
+  - lbmethod_bytraffic
   notify: Reload Apache
-  
-- name: Create document root
-  file:
-    path: "/var/www/{{ http_host }}"
-    state: directory
-    owner: "{{ app_user }}"
-    mode: '0755'
-
-- name: Copy index test page
-  template:
-    src: roles/apacheRole/templates/index.html.j2
-    dest: "/var/www/{{ http_host }}/index.html"
 
 - name: Set up Apache virtuahHost
+  become: true
   template:
-    src: roles/apacheRole/templates/apache.conf.j2
+    src: ../roles/apacheRole/templates/apache.conf.j2
     dest: "/etc/apache2/sites-available/000-default.conf"
   notify: Reload Apache
 
 - name: "UFW - Allow HTTP on port {{ http_port }}"
+  become: true
   ufw:
     rule: allow
     port: "{{ http_port }}"
     proto: tcp
 ```
 
+![apache role](./images/p13_vsc_10.png)
+
 *handlers/main.yml*
 ```
 ---
 - name: Reload Apache
+  become: true
   service:
     name: apache2
     state: reloaded
 
 - name: Restart Apache
+  become: true
   service:
     name: apache2
     state: restarted
 ```
+
+![apache role](./images/p13_vsc_11.png)
 
 *templates/apache.conf.j2*
 ```
@@ -466,6 +474,8 @@ Our file structure under apache (apacheRole) will look like this:
 </VirtualHost>
 ```
 
+![apache role](./images/p13_vsc_12.png)
+
 *vars/main.yml*
 ```
 ---
@@ -479,6 +489,8 @@ web1: "<webserver1 private IP>"
 web2: "<webserver2 private IP>"
 ```
 
+![apache role](./images/p13_vsc_11.png)
+
 *defaults/main.yml*
 ```
 ---
@@ -486,9 +498,11 @@ enable_nginx_lb: false
 load_balancer_is_required: false
 
 #IP mapping for servers
- web1: <webserver1 private IP>
- web2: <webserver2 private IP>
+web1: <webserver1 private IP>
+web2: <webserver2 private IP>
 ```
+
+![apache role](./images/p13_vsc_14.png)
 
 ## Configuring Load Balancer
 
@@ -504,6 +518,8 @@ Update both assignments and site.yml files respectively
     - { role: apache, when: enable_apache_lb and load_balancer_is_required }
 ```
 
+![LB role](./images/p13_vsc_15.png)
+
 *site.yml file*
 ```
 - name: Loadbalancers assignment
@@ -512,7 +528,9 @@ Update both assignments and site.yml files respectively
   when: load_balancer_is_required 
 ```
 
-Now you can make use of *env-vars\uat.yml* file to define which loadbalancer to use in UAT environment by setting respective environmental variable to true. You can switch between the two LBs by setting respective environmental variable to true and other to false.
+![site.yml role](./images/p13_vsc_16.png)
+
+Now you can make use of *env-vars/uat.yml* file to define which loadbalancer to use in UAT environment by setting respective environmental variable to true. You can switch between the two LBs by setting respective environmental variable to true and other to false. **In this case, we choose to use apache as our LB**.
 
 when apache is enabled:
 ![LB environment](./images/p13_vsc_06.png)
@@ -521,3 +539,11 @@ when nginx is enabled:
 ![LB environment](./images/p13_vsc_07.png)
 
 To test this, you can update inventory for each environment and run Ansible against each environment.
+
+`ansible-playbook -i inventory/uat.yml playbooks/site.yml`
+
+![playbook](./images/p13_cli_01.png)
+
+LB webpage
+
+![LB page](./images/p13_web_06.png)
