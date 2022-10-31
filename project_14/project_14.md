@@ -220,12 +220,40 @@ The **Name** can be any name, but to get the **Path to ansible executables direc
 
 copy the path highlighted and paste in your ansible configuration as shown above.
 
+## Creating Jenkinsfile from scratch to run Project-13 on Jenkins.
+
+1. create new branch - **jenkinsfile-p13**
+
+2. with the aid of *pipeline syntax*, new Jenkinsfile is created from scratch. 
+
+
+![jenkins-ansible](./images/p14_vsc_12.png)
+
+commit the changes to update your github repo.
+Go to Jenkins *ansible-config* job, click *scan repository now*
+
+![jenkins-ansible](./images/p14_url_28.png)
+
+job was succesful!
+
+![jenkins-ansible](./images/p14_url_27.png)
+
+create pull request and merge *jenkinsfile-p13* branch with *main*, then click *scan repository now* again.
+
+![jenkins-ansible](./images/p14_url_29.png)
+
+run the job again for the main branch
+
+![jenkins-ansible](./images/p14_url_30.png)
+
 ## Parameterizing Jenkinsfile For Ansible Deployment
 ---
 
 To deploy to other environments, we will need to use parameters.
 
-Update **sit** inventory with new servers
+1. create a new branch - *jenkinsfile-parameterize*
+
+2. Update **sit** inventory with new servers
 ```
 [tooling]
 <SIT-Tooling-Web-Server-Private-IP-Address>
@@ -244,7 +272,7 @@ ansible_python_interpreter=/usr/bin/python
 <SIT-DB-Server-Private-IP-Address>
 ```
 
-Update Jenkinsfile to introduce parameterization. Below is just one parameter. It has a default value in case if no value is specified at execution. It also has a description so that everyone is aware of its purpose.
+3. Update **Jenkinsfile** to introduce parameterization. Below is just one parameter. It has a default value in case if no value is specified at execution. It also has a description so that everyone is aware of its purpose.
 
 ```
 pipeline {
@@ -254,7 +282,19 @@ pipeline {
       string(name: 'inventory', defaultValue: 'dev',  description: 'This is the inventory file for the environment to deploy configuration')
     }
 ```
-![ansible](./images/p14_vsc_11.png)
-...
-In the Ansible execution section, remove the hardcoded inventory/dev and replace with `${inventory}
+4. In the *Execute Ansible Playbook* stage, remove the hardcoded inventory/dev and replace with ${inventory}. 
+
+![ansible](./images/p14_vsc_14.png)
+
 From now on, each time you hit on execute, it will expect an input.
+
+![jenkins](./images/p14_url_31.png)
+
+Pull request & merge to main branch
+
+![jenkins](./images/p14_url_32.png)
+
+Notice that the default value loads up, but we can now specify which environment we want to deploy the configuration to. Simply type **sit** and hit Run
+
+
+
