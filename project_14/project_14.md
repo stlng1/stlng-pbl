@@ -315,36 +315,27 @@ Notice that the default value loads up, but we can now specify which environment
 
 ## Step 1 – Prepare Artifactory Server
 
-1. download ansible role for Artifactory to install on newly spun artifactory server. 
-
-2. Next, Set JAVA_HOME environment variable with the following command:
-
+1. Install Java
 ```
-echo "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.191.b12-1.el7_6.x86_64" >> /etc/profile
-. /etc/profile
-env | grep JAVA
-JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.191.b12-1.el7_6.x86_64`
+sudo yum -y install java-1.8.0-openjdk  java-1.8.0-openjdk-devel
+java -version
 ```
 
-3. Next, add the JFrog Artifactory repository with the following command:
+2. Install JFrog Artifactory OSS:
 
-`echo "deb https://jfrog.bintray.com/artifactory-debs bionic main" | tee /etc/apt/sources.list.d/jfrog.list`
+sudo yum -y install jfrog-artifactory-oss wget
 
-4. Once the repository is added, update the repository and install JFrog Artifactory with the following command:
+3. Set ARTIFACTORY_HOME
 
-`apt-get update -y`
+echo "export ARTIFACTORY_HOME=/opt/jfrog/artifactory" | sudo tee -a /etc/profile
+source /etc/profile
+env | grep ARTIFACTORY_HOME
 
-`apt-get install jfrog-artifactory-oss -y`
+4. Access Artifactory Web Interface
+Artifactory can be accessed using the following URL:
 
-5. Next, start the Artifactory service and enable it to start at system reboot with the following command:
-
-`systemctl start artifactory`
-
-`systemctl enable artifactory`
-
-6. Next, verify the status of Artifactory service using the following command:
-
-`systemctl status artifactory`
+http://<SERVERIP>:8081/artifactory
+You should see Artifactory welcome page.
 
 ## Step 2: Prepare Jenkins Server
 
