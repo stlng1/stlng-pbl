@@ -182,7 +182,7 @@ For ubuntu.pkr.hcl, we have to repeat step 2 to retrieve the ubuntu base image f
  a. environment_var_set: for environmental variables
 
  b. general_var_set: for general variables
- 
+
  c. network_var_set: for network/compute variables
 
 ![terraform cloud variable set](./images/p19_web_17a.png)
@@ -232,6 +232,8 @@ For ubuntu.pkr.hcl, we have to repeat step 2 to retrieve the ubuntu base image f
       b. Database name, password and username for wordpress and tooling
       c. Access point ID for wordpress and tooling
       d. PrivateALB DNS for nginx reverse proxy
+
+![ansible](./images/p19_web_42.png)
 
 17. push the updated Ansible codes to github repository.
 
