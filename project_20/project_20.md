@@ -107,7 +107,7 @@ The cloned repository has an already built *Dockerfile* for this purpose.
 
 ```docker build -t tooling:0.0.1 . ```
 
-In the above command, we specify a parameter -t, so that the image can be tagged tooling"0.0.1 - Also, you have to notice the . at the end. This is important as that tells Docker to locate the Dockerfile in the current directory you are running the command. Otherwise, you would need to specify the absolute path to the Dockerfile.
+In the above command, we specify a parameter -t, so that the image can be tagged tooling:0.0.1 - Also, you have to notice the . at the end. This is important as that tells Docker to locate the Dockerfile in the current directory you are running the command. Otherwise, you would need to specify the absolute path to the Dockerfile.
 
 15.  Run your image to create container with the command below..
     
@@ -194,8 +194,7 @@ fi
 
 **2. Run both database and app on your laptop Docker Engine**
 
-     - **database:** for this task we create new database, homestead on exhisting mysql server 
-  created earlier.
+- **database:** for this task we create new database - homestead on the exhisting mysql server created earlier.
 
   a. Create a file and name it **create_user2.sql** and add the below code in the file: This code will create a new user -homestead and a new database -homestead.
 
