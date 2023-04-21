@@ -37,13 +37,13 @@ docker run --network tooling_app_network -h mysqlserverhost --name=mysql-server 
 
 7. Run the script below from the directory where *create_user.sql* file is located to create new user and assign priviledges:
 
-```sudo docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < create_user.sql```
+```docker exec -i mysql-server mysql -uroot -p$MYSQL_PW<create_user.sql```
 
 8. Connect to MySQL server from a second container running the MySQL client utility:
 
 Run the MySQL Client Container:
 
-```sudo docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u  -p ```
+```docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u  -p ```
 
 ![docker](./images/p20_cli_04.png)
 
@@ -55,9 +55,13 @@ Run the MySQL Client Container:
 
 10. On your terminal, export the location of the SQL file
     
-``` export tooling_db_schema=./home/femmy/workspace/docker/tooling/html/tooling_db_schema.sql ```
+```
+export tooling_db_schema=<PATH>/tooling/html/tooling_db_schema.sql
+```
+ *export tooling_db_schema=/home/femmy/workspace/tooling/html/tooling_db_schema.sql*
 
-*note: You can find the tooling_db_schema.sql in the tooling/html/tooling_db_schema.sql folder of cloned repo.*
+
+note: You can find the tooling_db_schema.sql in the tooling/html/tooling_db_schema.sql folder of cloned repo.
 
 11. Verify that the path is exported
 
@@ -67,12 +71,12 @@ Run the MySQL Client Container:
 
 12. create database and prepare the schema using the *tooling_db_schema.sql* script. With the docker exec command, you can execute a command in a running container.
  
-``` sudo docker exec -i mysql-server mysql -u -p$MYSQL_PW < $tooling_db_schema ```
+``` docker exec -i mysql-server mysql -u -p$MYSQL_PW < $tooling_db_schema ```
 
 
 ![docker](./images/p20_cli_05.png)
 
-13. Update the **.env** file with connection details to the database
+13. Create and Update the **.env** file with connection details to the database
     
 The .env file is a hidden file located in the path *tooling/html/.env* 
 
@@ -101,13 +105,13 @@ The cloned repository has an already built *Dockerfile* for this purpose.
 
 14. building your image: Ensure you are inside the "tooling" directory that has the *Dockerfile*, then execute the following command:
 
-```sudo docker build -t tooling:0.0.1 . ```
+```docker build -t tooling:0.0.1 . ```
 
 In the above command, we specify a parameter -t, so that the image can be tagged tooling"0.0.1 - Also, you have to notice the . at the end. This is important as that tells Docker to locate the Dockerfile in the current directory you are running the command. Otherwise, you would need to specify the absolute path to the Dockerfile.
 
 15.  Run your image to create container with the command below..
     
-``` sudo docker run --network tooling_app_network --env-file ./html/.env -p 8085:80 -it tooling:0.0.1 ```
+``` docker run --network tooling_app_network --env-file ./html/.env -p 8085:80 -it tooling:0.0.1 ```
 
 *note: this command should be run from the directory containing the Dockerfile.*
 
@@ -156,8 +160,9 @@ COPY . .
 RUN chmod +x /var/www/entrypoint.sh
 ENTRYPOINT [ "/var/www/entrypoint.sh" ]
 
-=============================================================
+```
 
+```
 entrypoint.sh:
 
 #!/bin/bash
@@ -317,7 +322,7 @@ pipeline {
   stages {
     stage('Build image for php-todo-app') {
       steps {
-        sh 'docker build -t stlng/php-todo-feature:0.0.1 .'
+        sh 'docker build -t stlng/php-todo-master:0.0.1 .'
       }
     }
     stage('Login to docker hub') {
@@ -327,7 +332,7 @@ pipeline {
     }
     stage('Push docker image to docker hub registry') {
       steps {
-        sh 'docker push stlng/php-todo-feature:0.0.1'
+        sh 'docker push stlng/php-todo-master:0.0.1'
       }
     }
   }
@@ -362,68 +367,86 @@ follow the diagrams below to create credential for docker hub. Paste the access 
 
 ![docker](./images/p20_web_12.png)
 
-3. update images from Jenkinsfile have a prefix that suggests which branch the image was pushed from. For master branch, we have php-todo-master:0.0.1 while for feature branch, we have php-todo-feature:0.0.1. Push branches to github after updating.
+3. update images from Jenkinsfile have a prefix that suggests which branch the image was pushed from. For master branch, we have php-todo-master:0.0.1 while for features branch, we have php-todo-features:0.0.1. Push branches to github after updating.
 
 4. Create a multi-branch pipeline
 
 - Go back to the Jenkins dashboard and click **Create a job**
 
-![docker](./images/p20_web_13.png)
+![docker](./images/p20_web_13a.png)
 
 ![docker](./images/p20_web_14.png)
 
 copy git url from you github repository
 
-![docker](./images/p20_web_15.png)
+![docker](./images/p20_web_15a.png)
 
 back to jenkins, select credential and paste *git url* and *validate*
 
-![docker](./images/p20_web_16.png)
+![docker](./images/p20_web_16a.png)
 
 As soon as you save the configuration, jenkins starts scanning the repository until it finds a *Jenkinsfiles* as shown below
 
-![docker](./images/p20_web_17.png)
+![docker](./images/p20_web_17a.png)
 
-5. Simulate a CI pipeline from a feature and master branch using previously created Jenkinsfile
+5. Simulate a CI pipeline from a features and master branch using previously created Jenkinsfile
+
+![docker](./images/p20_web_20.png)
 
 
+![docker](./images/p20_web_21.png)
 
 
 6. Verify that the images pushed from the CI can be found at the registry.
 
+![docker-hub](./images/p20_web_22.png)
 
 
+# Deployment with Docker Compose
+
+1. create **tooling.yml** file and paste the codes below:
+   
+```
+version: "3.9"
+services:
+  tooling_frontend:
+    build: .
+    ports:
+      - "5000:80"
+    volumes:
+      - tooling_frontend:/var/www/html
+    links:
+      - db
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: '${MYSQL_DBNAME}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASS}'
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+volumes:
+  tooling_frontend:
+  db:
+  ```
+
+2. create containers by running the command below:
+   
+   ```docker compose -f tooling.yml  up -d ```
+
+![docker-compose](./images/p20_cli_15.png)
+
+3. Verify that the compose is in the running status:
+
+![docker-compose](./images/p20_cli_16.png)
 
 
-. 
-11. create nginx Dockerfile and create server image. Change to nginx directory and run the following command from there.
+# Practice Task №2 – Complete Continuous Integration With A Test Stage
 
-```sudo docker build -t nginx-webserver .```
-
-2. back to php-todo directory. create *create_database.sql* file
-
-vi create_database.sql
-
-paste the following code in it save and exit
-
-CREATE DATABASE todo_db;
-
-3.  Run the script below from the directory where *create_database.sql* file is located to create todo_db database:
-
-```sudo docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < create_todo_user.sql ```
-
-4. build nginx image. run from inside nginx sub directory.
- 
-```sudo docker build -t nginx-todo:0.0.1 .```
-
-5. build php-todo image using the following command. run from inside php-todo directory.
-
-```sudo docker build -t php-todo:0.0.1 .```
-
-6. create php-todo container
-
-```sudo docker run --network tooling_app_network --name app --env-file ./.env -it php-todo:0.0.1 ```
-
-7. create nginx-todo container
-
-```sudo docker run --network tooling_app_network --name webserver -p 8085:80 -it nginx-todo:0.0.1```
+1. Document your understanding of all the fields specified in the Docker Compose file tooling.yml
+2. Update your Jenkinsfile with a test stage before pushing the image to the registry.
+3. What you will be testing here is to ensure that the tooling site http endpoint is able to return status code 200. Any other code will be determined a stage failure.
+4. Implement a similar pipeline for the PHP-todo app.
+5. Ensure that both pipelines have a clean-up stage where all the images are deleted on the Jenkins server.
