@@ -5,15 +5,21 @@
 
 1. create a network
 
-```docker network create --subnet=10.18.0.0/24 tooling_app_network```
+```
+docker network create --subnet=10.18.0.0/24 tooling_app_network
+```
 
 2. create an environment variable to store the root password
 
-```export MYSQL_PW=root```
+```
+export MYSQL_PW=root
+```
 
 3. verify the environment variable is created
 
-```echo $MYSQL_PW```
+```
+echo $MYSQL_PW
+```
 
 ![docker](./images/p20_cli_01.png)
 
@@ -27,23 +33,31 @@ docker run --network tooling_app_network -h mysqlserverhost --name=mysql-server 
 
 5. Verify the container is running:
    
-```docker ps -a```
+```
+docker ps -a
+```
 
 ![docker](./images/p20_cli_03.png)
 
 6. Create a file and name it **create_user.sql** and add the below code in the file:
 
-```CREATE USER ''@'%' IDENTIFIED BY ''; GRANT ALL PRIVILEGES ON * . * TO ''@'%';```
+```
+CREATE USER ''@'%' IDENTIFIED BY ''; GRANT ALL PRIVILEGES ON * . * TO ''@'%';
+```
 
 7. Run the script below from the directory where *create_user.sql* file is located to create new user and assign priviledges:
 
-```docker exec -i mysql-server mysql -uroot -p$MYSQL_PW<create_user.sql```
+```
+docker exec -i mysql-server mysql -uroot -p$MYSQL_PW<create_user.sql
+```
 
 8. Connect to MySQL server from a second container running the MySQL client utility:
 
 Run the MySQL Client Container:
 
-```docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u  -p ```
+```
+docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u  -p
+```
 
 ![docker](./images/p20_cli_04.png)
 
@@ -51,27 +65,33 @@ Run the MySQL Client Container:
 
 9. Clone the Tooling-app repository:
    
-```sudo git clone https://github.com/darey-devops/tooling.git```
+```
+sudo git clone https://github.com/darey-devops/tooling.git
+```
 
 10. On your terminal, export the location of the SQL file
     
 ```
 export tooling_db_schema=<PATH>/tooling/html/tooling_db_schema.sql
 ```
- *export tooling_db_schema=/home/femmy/workspace/tooling/html/tooling_db_schema.sql*
+ ```export tooling_db_schema=/home/femmy/workspace/tooling/html/tooling_db_schema.sql```
 
 
-note: You can find the tooling_db_schema.sql in the tooling/html/tooling_db_schema.sql folder of cloned repo.
+*note: You can find the tooling_db_schema.sql in the /tooling/html folder of cloned repo.*
 
-11. Verify that the path is exported
+11. Verify th the path is exported
 
-``` echo $tooling_db_schema ```
+``` 
+echo $tooling_db_schema 
+```
 
 ![docker](./images/p20_cli_06.png)
 
 12. create database and prepare the schema using the *tooling_db_schema.sql* script. With the docker exec command, you can execute a command in a running container.
  
-``` docker exec -i mysql-server mysql -u -p$MYSQL_PW < $tooling_db_schema ```
+``` 
+docker exec -i mysql-server mysql -u -p$MYSQL_PW < $tooling_db_schema 
+```
 
 
 ![docker](./images/p20_cli_05.png)
@@ -82,7 +102,9 @@ The .env file is a hidden file located in the path *tooling/html/.env*
 
 open the file with your favorite line editor
 
-```sudo vi tooling/html/.env```
+```
+sudo vi tooling/html/.env
+```
 
 ```
 MYSQL_IP=mysqlserverhost
@@ -93,31 +115,41 @@ MYSQL_DBNAME=toolingdb
 
 Flags used:
 
-MYSQL_IP mysql ip address "leave as mysqlserverhost"
-MYSQL_USER mysql username for user, export as environment variable
-MYSQL_PASS mysql password for user, export as environment varaible
-MYSQL_DBNAME mysql database name, "toolingdb"
+**MYSQL_IP** mysql ip address "leave as mysqlserverhost"
+
+**MYSQL_USER** mysql username for user, export as environment variable
+
+**MYSQL_PASS** mysql password for user, export as environment varaible
+
+**MYSQL_DBNAME** mysql database name, "toolingdb"
 
 
-## Containerization of Tooling App
+## **Containerization of Tooling App**
+---
 
 The cloned repository has an already built *Dockerfile* for this purpose.
 
 14. building your image: Ensure you are inside the "tooling" directory that has the *Dockerfile*, then execute the following command:
 
-```docker build -t tooling:0.0.1 . ```
+```
+docker build -t tooling:0.0.1 . 
+```
 
 In the above command, we specify a parameter -t, so that the image can be tagged tooling:0.0.1 - Also, you have to notice the . at the end. This is important as that tells Docker to locate the Dockerfile in the current directory you are running the command. Otherwise, you would need to specify the absolute path to the Dockerfile.
 
 15.  Run your image to create container with the command below..
-    
-``` docker run --network tooling_app_network --env-file ./html/.env -p 8085:80 -it tooling:0.0.1 ```
+    `
+```
+docker run --network tooling_app_network --env-file ./html/.env -p 8085:80 -it tooling:0.0.1
+```
 
 *note: this command should be run from the directory containing the Dockerfile.*
 
 16. Verify the container is running:
-   
-```docker ps -a```
+  
+```
+docker ps -a
+```
 
 ![docker](./images/p20_web_02.png)
 
@@ -196,21 +228,29 @@ fi
 
 - **database:** for this task we create new database - homestead on the exhisting mysql server created earlier.
 
-  a. Create a file and name it **create_user2.sql** and add the below code in the file: This code will create a new user -homestead and a new database -homestead.
+  a. Create a file and name it **create_user2.sql** and add the below code in the file: This code will create a new user -**homestead** and a new database -**homestead**.
 
-```CREATE USER 'homestead'@'%' IDENTIFIED BY 'sePret^i'; GRANT ALL PRIVILEGES ON * . * TO 'homestead'@'%'; CREATE DATABASE homestead; FLUSH PRIVILEGES;```
+```
+CREATE USER 'homestead'@'%' IDENTIFIED BY 'sePret^i'; GRANT ALL PRIVILEGES ON * . * TO 'homestead'@'%'; CREATE DATABASE homestead; FLUSH PRIVILEGES;
+```
 
   b. Run the script below from the directory where *create_user2.sql* file is located to create new user and assign priviledges:
 
-```sudo docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < create_user2.sql```
+```
+docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < create_user2.sql
+```
 
   c. connect to MySQL server from a second container running the MySQL client utility:
 
-```sudo docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u homestead  -p```
+```
+docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u homestead  -p
+```
 
   d. display databases
 
-  ```SHOW DATABASES;```
+  ```
+  SHOW DATABASES;
+  ```
 
   ![docker](./images/p20_cli_12.png)
 
@@ -218,11 +258,15 @@ fi
     
   e. build image using the following command. run from inside php-todo directory.
 
-```sudo docker build -t php-todo:0.0.1 .```
+```
+docker build -t php-todo:0.0.1 .
+```
 
   f. create **.env** file from **.env.sample** file and update values as shown below:
 
-  ```cp .env.sample .env```
+  ```
+  cp .env.sample .env
+  ```
   
   ```
   APP_ENV=local
@@ -253,7 +297,9 @@ fi
   
   g. create *webserver* container
 
-```sudo docker run -d --network tooling_app_network --name webserver --env-file .env -p 8085:8000 -it php-todo:0.0.1```
+```
+docker run -d --network tooling_app_network --name webserver --env-file .env -p 8085:8000 -it php-todo:0.0.1
+```
 
 ![docker](./images/p20_cli_07.png)
 
@@ -277,29 +323,39 @@ fi
 
 - list available images on your local system and identify the image to be pushed to docker hub
 
-```sudo docker image ls```
+```
+docker image ls
+```
 
 ![docker](./images/p20_cli_08a.png)
 
 - tag the image to be pushed to docker hub 
 
-```sudo docker tag php-todo:0.0.1 stlng/php-todo```
+```
+docker tag php-todo:0.0.1 stlng/php-todo
+```
 
 - see the latest image tagged
 
-```sudo docker image ls```
+```
+docker image ls
+```
 
 ![docker](./images/p20_cli_09a.png)
 
 - login to docker hub with the command below. you will be promted for username and password
 
-```sudo docker login```
+```
+docker login
+```
 
 ![docker](./images/p20_cli_10a.png)
 
 - push tagged image to dockerhub repository
 
-```sudo docker push stlng/php-todo:latest```
+```
+docker push stlng/php-todo:latest
+```
 
 ![docker](./images/p20_cli_11a.png)
 
@@ -345,7 +401,7 @@ pipeline {
 
 2. Connect your repo to Jenkins
 
-- go to docker hub and follow the illustrations below:
+- go to docker hub and follow the illustrations below to generate New Access Token:
 
 ![docker](./images/p20_web_07.png)
 
@@ -353,7 +409,7 @@ pipeline {
 
 ![docker](./images/p20_web_09.png)
 
-- copy the access token generated, got to Jenkins, open **Dashboard > Manage Jenkins > Credentials > System > Global credentials (unrestricted)**
+- copy the access token generated, go to Jenkins, open **Dashboard > Manage Jenkins > Credentials > System > Global credentials (unrestricted)**
 follow the diagrams below to create credential for docker hub. Paste the access token copied from docker hub as password:
 
 ![docker](./images/p20_web_10.png)
@@ -376,7 +432,7 @@ follow the diagrams below to create credential for docker hub. Paste the access 
 
 ![docker](./images/p20_web_14.png)
 
-copy git url from you github repository
+copy git url from your github repository
 
 ![docker](./images/p20_web_15a.png)
 
@@ -440,12 +496,3 @@ volumes:
 3. Verify that the compose is in the running status:
 
 ![docker-compose](./images/p20_cli_16.png)
-
-
-# Practice Task №2 – Complete Continuous Integration With A Test Stage
-
-1. Document your understanding of all the fields specified in the Docker Compose file tooling.yml
-2. Update your Jenkinsfile with a test stage before pushing the image to the registry.
-3. What you will be testing here is to ensure that the tooling site http endpoint is able to return status code 200. Any other code will be determined a stage failure.
-4. Implement a similar pipeline for the PHP-todo app.
-5. Ensure that both pipelines have a clean-up stage where all the images are deleted on the Jenkins server.

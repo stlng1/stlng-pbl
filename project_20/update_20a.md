@@ -1,85 +1,31 @@
-FROM php:7.2-apache
+# Practice Task №2 – Complete Continuous Integration With A Test Stage
 
-RUN apt-get update
+1. Document your understanding of all the fields specified in the Docker Compose file tooling.yml
 
-#development packages
+**version:** version of docker to be used.
 
-RUN apt-get install -y \
-    git \
-    zip \
-    curl \
-    sudo \
-    unzip \
-    libicu-dev \
-    libbz2-dev \
-    libpng-dev \
-    libjpeg-dev \
-    libmcrypt-dev \
-    libreadline-dev \
-    libfreetype6-dev \
-    libonig-dev \
-    libzip-dev \
-    g++
+**services:** services to be 'boxed' in containers being build by docker
 
-#apache configs + document root. by default, php-apache document root is set to /var/www/html but laravel index.php is in /var/www/html/public. so we'll edit the apache config and sites-available. 
+**tooling_frontend/db:** names of services
 
-ENV APACHE_DOCUMENT_ROOT=#${APACHE_DOCUMENT_ROOT}
-ENV APACHE_RUN_USER=#${UID}
-ENV APACHE_RUN_GROUP=#${UID}
-ENV HOST_PORT=#${HOST_PORT}
+**build:** location of Dockerfile required to build image
 
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+**ports:** ports where service is run and also mapped to host
 
-#We'll enable mod_rewrite for url matching and mod_headers for configuring webserver headers like Access-Control-Allow-Origin-
+**volumes:** where service related data is stored
 
-RUN a2enmod rewrite headers
+**links:** other services that must be running before it is started
 
-#start with base php config, then add extensions
+**image:** the image the container will be built from
 
-RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+**restart:** always
 
-RUN docker-php-ext-install \
-    bz2 \
-    intl \
-    iconv \
-    bcmath \
-    opcache \
-    calendar \
-    mbstring \
-    pdo_mysql \
-    zip
+**environment:** environmental varibles
 
-#composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+2. Update your Jenkinsfile with a test stage before pushing the image to the registry.
 
-#we need a user with the same UID/GID with host user
-#so when we execute CLI commands, all the host file's ownership remains intact
-#otherwise command from inside container will create root-owned files and directories
+```
 
-ARG uid
-RUN useradd -G www-data,root -u $uid -d /home/devuser devuser
-RUN mkdir -p /home/devuser/.composer && \
-    chown -R devuser:devuser /home/devuser
-
-COPY . /var/www/html
-RUN cd /var/www/html && composer install && php artisan key:generate
-
-
-
-
-.env
-
-DB_HOST=mysql-db
-MYSQL_ROOT_PASSWORD=securerootpassword
-MYSQL_DATABASE=db
-MYSQL_USER=dbuser
-MYSQL_PASSWORD=secret
-
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-
-MIX_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
-MIX_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
-
-UID=1000
-HOST_PORT=8000
+3. What you will be testing here is to ensure that the tooling site http endpoint is able to return status code 200. Any other code will be determined a stage failure.
+4. Implement a similar pipeline for the PHP-todo app.
+5. Ensure that both pipelines have a clean-up stage where all the images are deleted on the Jenkins server.
