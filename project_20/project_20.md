@@ -5,15 +5,21 @@
 
 1. create a network
 
-```sudo docker network create --subnet=10.18.0.0/24 tooling_app_network```
+```
+docker network create --subnet=10.18.0.0/24 tooling_app_network
+```
 
 2. create an environment variable to store the root password
 
-```export MYSQL_PW=root```
+```
+export MYSQL_PW=root
+```
 
 3. verify the environment variable is created
 
-```echo $MYSQL_PW```
+```
+echo $MYSQL_PW
+```
 
 ![docker](./images/p20_cli_01.png)
 
@@ -27,23 +33,31 @@ docker run --network tooling_app_network -h mysqlserverhost --name=mysql-server 
 
 5. Verify the container is running:
    
-```docker ps -a```
+```
+docker ps -a
+```
 
 ![docker](./images/p20_cli_03.png)
 
 6. Create a file and name it **create_user.sql** and add the below code in the file:
 
-```CREATE USER ''@'%' IDENTIFIED BY ''; GRANT ALL PRIVILEGES ON * . * TO ''@'%';```
+```
+CREATE USER ''@'%' IDENTIFIED BY ''; GRANT ALL PRIVILEGES ON * . * TO ''@'%';
+```
 
-7. Run the script below from the directory where *create_user.sql* file is located:
+7. Run the script below from the directory where *create_user.sql* file is located to create new user and assign priviledges:
 
-```sudo docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < ./create_user.sql ```
+```
+docker exec -i mysql-server mysql -uroot -p$MYSQL_PW<create_user.sql
+```
 
 8. Connect to MySQL server from a second container running the MySQL client utility:
 
 Run the MySQL Client Container:
 
-```sudo docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u  -p ```
+```
+docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u  -p
+```
 
 ![docker](./images/p20_cli_04.png)
 
@@ -51,34 +65,46 @@ Run the MySQL Client Container:
 
 9. Clone the Tooling-app repository:
    
-```sudo git clone https://github.com/darey-devops/tooling.git```
+```
+sudo git clone https://github.com/darey-devops/tooling.git
+```
 
 10. On your terminal, export the location of the SQL file
     
-``` export tooling_db_schema=./home/femmy/workspace/docker/tooling/html/tooling_db_schema.sql ```
+```
+export tooling_db_schema=<PATH>/tooling/html/tooling_db_schema.sql
+```
+ ```export tooling_db_schema=/home/femmy/workspace/tooling/html/tooling_db_schema.sql```
 
-*note: You can find the tooling_db_schema.sql in the tooling/html/tooling_db_schema.sql folder of cloned repo.*
 
-11. Verify that the path is exported
+*note: You can find the tooling_db_schema.sql in the /tooling/html folder of cloned repo.*
 
-``` echo $tooling_db_schema ```
+11. Verify th the path is exported
+
+``` 
+echo $tooling_db_schema 
+```
 
 ![docker](./images/p20_cli_06.png)
 
 12. create database and prepare the schema using the *tooling_db_schema.sql* script. With the docker exec command, you can execute a command in a running container.
  
-``` sudo docker exec -i mysql-server mysql -u -p$MYSQL_PW < $tooling_db_schema ```
+``` 
+docker exec -i mysql-server mysql -u -p$MYSQL_PW < $tooling_db_schema 
+```
 
 
 ![docker](./images/p20_cli_05.png)
 
-13. Update the **.env** file with connection details to the database
+13. Create and Update the **.env** file with connection details to the database
     
 The .env file is a hidden file located in the path *tooling/html/.env* 
 
 open the file with your favorite line editor
 
-```sudo vi tooling/html/.env```
+```
+sudo vi tooling/html/.env
+```
 
 ```
 MYSQL_IP=mysqlserverhost
@@ -89,31 +115,41 @@ MYSQL_DBNAME=toolingdb
 
 Flags used:
 
-MYSQL_IP mysql ip address "leave as mysqlserverhost"
-MYSQL_USER mysql username for user, export as environment variable
-MYSQL_PASS mysql password for user, export as environment varaible
-MYSQL_DBNAME mysql database name, "toolingdb"
+**MYSQL_IP** mysql ip address "leave as mysqlserverhost"
+
+**MYSQL_USER** mysql username for user, export as environment variable
+
+**MYSQL_PASS** mysql password for user, export as environment varaible
+
+**MYSQL_DBNAME** mysql database name, "toolingdb"
 
 
-## Containerization of Tooling App
+## **Containerization of Tooling App**
+---
 
 The cloned repository has an already built *Dockerfile* for this purpose.
 
 14. building your image: Ensure you are inside the "tooling" directory that has the *Dockerfile*, then execute the following command:
 
-```sudo docker build -t tooling:0.0.1 . ```
+```
+docker build -t tooling:0.0.1 . 
+```
 
-In the above command, we specify a parameter -t, so that the image can be tagged tooling"0.0.1 - Also, you have to notice the . at the end. This is important as that tells Docker to locate the Dockerfile in the current directory you are running the command. Otherwise, you would need to specify the absolute path to the Dockerfile.
+In the above command, we specify a parameter -t, so that the image can be tagged tooling:0.0.1 - Also, you have to notice the . at the end. This is important as that tells Docker to locate the Dockerfile in the current directory you are running the command. Otherwise, you would need to specify the absolute path to the Dockerfile.
 
 15.  Run your image to create container with the command below..
-    
-``` sudo docker run --network tooling_app_network --env-file ./html/.env -p 8085:80 -it tooling:0.0.1 ```
+    `
+```
+docker run --network tooling_app_network --env-file ./html/.env -p 8085:80 -it tooling:0.0.1
+```
 
 *note: this command should be run from the directory containing the Dockerfile.*
 
 16. Verify the container is running:
-   
-```docker ps -a```
+  
+```
+docker ps -a
+```
 
 ![docker](./images/p20_web_02.png)
 
@@ -124,97 +160,206 @@ In the above command, we specify a parameter -t, so that the image can be tagged
 
 # PRACTICE TASK
 
-## Practice Task №1 – Implement a POC to migrate the PHP-Todo app into a containerized application.
+# Practice Task №1 – Implement a POC to migrate the PHP-Todo app into a containerized application.
 
-### Repository for this task: https://github.com/stlng1/php-todo.git
+Repository for this task: https://github.com/stlng1/php-todo.git
 
 ## **Part 1**
 
-1. Write a Dockerfile for the TODO app
+**1. Write a Dockerfile for the TODO app**
 
 ```
-FROM php:7-fpm-alpine3.16
+Dockerfile:
 
-# environment variable defining default port
+FROM php:7.4 as php
+
+RUN apt-get update -y
+RUN apt-get install -y unzip libpq-dev libcurl4-gnutls-dev
+RUN docker-php-ext-install pdo pdo_mysql bcmath
+
+RUN pecl install -o -f redis \
+    && rm -rf /tmp/pear \
+    && docker-php-ext-enable redis
+
+# WORKDIR /var/www
+# COPY . .
+COPY --from=composer:2.3.5 /usr/bin/composer /usr/bin/composer
+
 ENV PORT=8000
 
-# define the working directory for any subsequent commands on the container
-WORKDIR /var/www/
-
-
-RUN apk update 
-
-# composer is required to download app dependencies. here we download and install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --version=2.4.3 --install-dir=/usr/local/bin --filename=composer
-
-# copy all the files from the host's current directory into the container working directory
+WORKDIR /var/www
 COPY . .
+RUN chmod +x /var/www/entrypoint.sh
+ENTRYPOINT [ "/var/www/entrypoint.sh" ]
 
-# install the app dependencies with composer
-RUN composer install --ignore-platform-reqs
-
-# ensures that the web server listens to all available IP addresses, 
-# which is required for Docker to map a port on the host into the container
-CMD ["php","artisan","serve","--host=0.0.0.0"]
 ```
 
-2. Run both database and app on your laptop Docker Engine
+```
+entrypoint.sh:
 
-- for this task we same mysql database created earlier - mysql-server
+#!/bin/bash
 
-- build php-todo image using the following command. run from inside php-todo directory.
+if [ ! -f "vendor/autoload.php" ]; then
+    composer install --no-progress --no-interaction
+fi
 
-```sudo docker build -t laravel-app .```
+if [ ! -f ".env" ]; then
+    echo "Creating env file for env $APP_ENV"
+    cp .env.example .env
+else
+    echo "env file exists."
+fi
 
-- create todo-app container
+role=${CONTAINER_ROLE:-app}
 
-```sudo docker run -d --network tooling_app_network --name webserver -p 8085:8000 -it laravel-app```
+if [ "$role" = "app" ]; then
+    php artisan migrate
+    php artisan key:generate
+    php artisan cache:clear
+    php artisan config:clear
+    php artisan route:clear
+    php artisan serve --port=$PORT --host=0.0.0.0 --env=.env
+    exec docker-php-entrypoint "$@"
+fi
+
+```
+
+**2. Run both database and app on your laptop Docker Engine**
+
+- **database:** for this task we create new database - homestead on the exhisting mysql server created earlier.
+
+  a. Create a file and name it **create_user2.sql** and add the below code in the file: This code will create a new user -**homestead** and a new database -**homestead**.
+
+```
+CREATE USER 'homestead'@'%' IDENTIFIED BY 'sePret^i'; GRANT ALL PRIVILEGES ON * . * TO 'homestead'@'%'; CREATE DATABASE homestead; FLUSH PRIVILEGES;
+```
+
+  b. Run the script below from the directory where *create_user2.sql* file is located to create new user and assign priviledges:
+
+```
+docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < create_user2.sql
+```
+
+  c. connect to MySQL server from a second container running the MySQL client utility:
+
+```
+docker run --network tooling_app_network --name mysql-client -it --rm mysql mysql -h mysqlserverhost -u homestead  -p
+```
+
+  d. display databases
+
+  ```
+  SHOW DATABASES;
+  ```
+
+  ![docker](./images/p20_cli_12.png)
+
+  **- app:** build php-todo app image and run in docker container
+    
+  e. build image using the following command. run from inside php-todo directory.
+
+```
+docker build -t php-todo:0.0.1 .
+```
+
+  f. create **.env** file from **.env.sample** file and update values as shown below:
+
+  ```
+  cp .env.sample .env
+  ```
+  
+  ```
+  APP_ENV=local
+  APP_DEBUG=true
+  APP_KEY=SomeRandomString
+  APP_URL=http://localhost
+
+  DB_HOST=mysqlserverhost
+  DB_DATABASE=homestead
+  DB_USERNAME=homestead
+  DB_PASSWORD="sePret^i"
+
+  CACHE_DRIVER=file
+  SESSION_DRIVER=file
+  QUEUE_DRIVER=sync
+
+  REDIS_HOST=127.0.0.1
+  REDIS_PASSWORD=null
+  REDIS_PORT=6379
+
+  MAIL_DRIVER=smtp
+  MAIL_HOST=mailtrap.io
+  MAIL_PORT=2525
+  MAIL_USERNAME=null
+  MAIL_PASSWORD=null
+  MAIL_ENCRYPTION=null
+  ```
+  
+  g. create *webserver* container
+
+```
+docker run -d --network tooling_app_network --name webserver --env-file .env -p 8085:8000 -it php-todo:0.0.1
+```
 
 ![docker](./images/p20_cli_07.png)
 
-3. Access the application from the browser
 
-![docker](./images/p20_web_0.png)
+**3. Access the application from the browser**
 
-## **Part 2**
+![docker](./images/p20_web_18.png)
+
+
+# Part 2
 
 1. Create an account in Docker Hub
 
 2. Create a new Docker Hub repository
 
-![docker](./images/p20_web_04.png)
+![docker](./images/p20_web_04a.png)
+
+![docker](./images/p20_web_04b.png)
 
 3. Push the docker images from your PC to the repository
 
 - list available images on your local system and identify the image to be pushed to docker hub
 
-```sudo docker image ls```
+```
+docker image ls
+```
 
-![docker](./images/p20_cli_08.png)
+![docker](./images/p20_cli_08a.png)
 
 - tag the image to be pushed to docker hub 
 
-```sudo docker tag tooling:0.0.1 stlng/tooling```
+```
+docker tag php-todo:0.0.1 stlng/php-todo
+```
 
 - see the latest image tagged
 
-```sudo docker image ls```
+```
+docker image ls
+```
 
-![docker](./images/p20_cli_09.png)
+![docker](./images/p20_cli_09a.png)
 
 - login to docker hub with the command below. you will be promted for username and password
 
-```sudo docker login```
+```
+docker login
+```
 
-![docker](./images/p20_cli_10.png)
+![docker](./images/p20_cli_10a.png)
 
 - push tagged image to dockerhub repository
 
-```sudo docker push stlng/tooling:latest```
+```
+docker push stlng/php-todo:latest
+```
 
-![docker](./images/p20_cli_11.png)
+![docker](./images/p20_cli_11a.png)
 
-![docker](./images/p20_web_06.png)
+![docker](./images/p20_web_06a.png)
 
 ## **Part 3**
 
@@ -230,9 +375,9 @@ pipeline {
     DOCKERHUB_CREDENTIALS = credentials('dockerhub')
   }
   stages {
-    stage('Build image for toolng-app') {
+    stage('Build image for php-todo-app') {
       steps {
-        sh 'docker build -t stlng/tooling-feature:0.0.1 .'
+        sh 'docker build -t stlng/php-todo-master:0.0.1 .'
       }
     }
     stage('Login to docker hub') {
@@ -242,7 +387,7 @@ pipeline {
     }
     stage('Push docker image to docker hub registry') {
       steps {
-        sh 'docker push stlng/tooling-feature:0.0.1'
+        sh 'docker push stlng/php-todo-master:0.0.1'
       }
     }
   }
@@ -256,7 +401,7 @@ pipeline {
 
 2. Connect your repo to Jenkins
 
-- go to docker hub and follow the illustrations below:
+- go to docker hub and follow the illustrations below to generate New Access Token:
 
 ![docker](./images/p20_web_07.png)
 
@@ -264,7 +409,7 @@ pipeline {
 
 ![docker](./images/p20_web_09.png)
 
-- copy the access token generated, got to Jenkins, open **Dashboard > Manage Jenkins > Credentials > System > Global credentials (unrestricted)**
+- copy the access token generated, go to Jenkins, open **Dashboard > Manage Jenkins > Credentials > System > Global credentials (unrestricted)**
 follow the diagrams below to create credential for docker hub. Paste the access token copied from docker hub as password:
 
 ![docker](./images/p20_web_10.png)
@@ -277,68 +422,77 @@ follow the diagrams below to create credential for docker hub. Paste the access 
 
 ![docker](./images/p20_web_12.png)
 
-3. update images from Jenkinsfile have a prefix that suggests which branch the image was pushed from. For master branch, we have tooling-master:0.0.1 while for feature branch, we have tooling-feature:0.0.1. Push branches to github after updating.
+3. update images from Jenkinsfile have a prefix that suggests which branch the image was pushed from. For master branch, we have php-todo-master:0.0.1 while for features branch, we have php-todo-features:0.0.1. Push branches to github after updating.
 
 4. Create a multi-branch pipeline
 
 - Go back to the Jenkins dashboard and click **Create a job**
 
-![docker](./images/p20_web_13.png)
+![docker](./images/p20_web_13a.png)
 
 ![docker](./images/p20_web_14.png)
 
-copy git url from you github repository
+copy git url from your github repository
 
-![docker](./images/p20_web_15.png)
+![docker](./images/p20_web_15a.png)
 
 back to jenkins, select credential and paste *git url* and *validate*
 
-![docker](./images/p20_web_16.png)
+![docker](./images/p20_web_16a.png)
 
 As soon as you save the configuration, jenkins starts scanning the repository until it finds a *Jenkinsfiles* as shown below
 
-![docker](./images/p20_web_17.png)
+![docker](./images/p20_web_17a.png)
 
-5. Simulate a CI pipeline from a feature and master branch using previously created Jenkinsfile
+5. Simulate a CI pipeline from a features and master branch using previously created Jenkinsfile
+
+![docker](./images/p20_web_20.png)
 
 
+![docker](./images/p20_web_21.png)
 
 
 6. Verify that the images pushed from the CI can be found at the registry.
 
+![docker-hub](./images/p20_web_22.png)
 
 
+# Deployment with Docker Compose
 
+1. create **tooling.yml** file and paste the codes below:
+   
+```
+version: "3.9"
+services:
+  tooling_frontend:
+    build: .
+    ports:
+      - "5000:80"
+    volumes:
+      - tooling_frontend:/var/www/html
+    links:
+      - db
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: '${MYSQL_DBNAME}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASS}'
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+volumes:
+  tooling_frontend:
+  db:
+  ```
 
-. 
-11. create nginx Dockerfile and create server image. Change to nginx directory and run the following command from there.
+2. create containers by running the command below:
+   
+   ```docker compose -f tooling.yml  up -d ```
 
-```sudo docker build -t nginx-webserver .```
+![docker-compose](./images/p20_cli_15.png)
 
-2. back to php-todo directory. create *create_database.sql* file
+3. Verify that the compose is in the running status:
 
-vi create_database.sql
-
-paste the following code in it save and exit
-
-CREATE DATABASE todo_db;
-
-3.  Run the script below from the directory where *create_database.sql* file is located to create todo_db database:
-
-```sudo docker exec -i mysql-server mysql -uroot -p$MYSQL_PW < ./create_database.sql ```
-
-4. build nginx image. run from inside nginx sub directory.
- 
-```sudo docker build -t nginx-todo:0.0.1 .```
-
-5. build php-todo image using the following command. run from inside php-todo directory.
-
-```sudo docker build -t php-todo:0.0.1 .```
-
-6. create php-todo container
-
-```sudo docker run --network tooling_app_network --name app --env-file ./.env -it php-todo:0.0.1 ```
-
-7. create nginx-todo container
-
-```sudo docker run --network tooling_app_network --name webserver -p 8085:80 -it nginx-todo:0.0.1```
+![docker-compose](./images/p20_cli_16.png)
