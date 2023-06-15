@@ -410,10 +410,10 @@ chmod 600 ssh/${NAME}.id_rsa
 
 **EC2 Instances for Console Plane (Master Nodes)**
 
-3. Create 1 Master nodes: Note – Use t2.micro instead of t2.small as t2.micro is covered by AWS free tier
+3. Create 3 Master nodes: Note – Use t2.micro instead of t2.small as t2.micro is covered by AWS free tier
 
 ```
-for i in 0; do
+for i in 0 1 2; do
   instance_id=$(aws ec2 run-instances \
     --associate-public-ip-address \
     --image-id ${IMAGE_ID} \
@@ -438,10 +438,10 @@ done
 
 **EC2 Instances for Worker Nodes**
 
-4. Create 2 worker nodes:
+4. Create 3 worker nodes:
 
 ```
-for i in 0 1; do
+for i in 0 1 2; do
   instance_id=$(aws ec2 run-instances \
     --associate-public-ip-address \
     --image-id ${IMAGE_ID} \
@@ -763,7 +763,7 @@ Also, Kubernetes uses a special-purpose authorization mode called **Node Authori
 Therefore, the certificate to be created must comply to these requirements. In the below example, there are 2 worker nodes, hence we will use bash to loop through a list of the worker nodes’ hostnames, and based on each index, the respective Certificate Signing Request (CSR), private key and client certificates will be generated.
 
 ```
-for i in 0 1; do
+for i in 0 1 2; do
   instance="${NAME}-worker-${i}"
   instance_hostname="ip-172-31-0-2${i}"
   cat > ${instance}-csr.json <<EOF
@@ -882,7 +882,7 @@ b. X509 Certificate for each worker node
 c. Private Key of the certificate for each worker node
 
 ```
-for i in 0 1; do
+for i in 0 1 2; do
   instance="${NAME}-worker-${i}"
   external_ip=$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=${instance}" \
@@ -901,7 +901,7 @@ OUTPUT:
 2. Master or Controller node: – Note that only the api-server related files will be sent over to the master nodes.
 
 ```
-for i in 0; do
+for i in 0 1 2; do
 instance="${NAME}-master-${i}" \
   external_ip=$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=${instance}" \
@@ -940,7 +940,7 @@ For each of the nodes running the kubelet component, it is very important that t
 Below command must be run in the directory where all the certificates were generated.
 
 ```
-for i in 0 1; do
+for i in 0 1 2; do
 
 instance="${NAME}-worker-${i}"
 instance_hostname="ip-172-31-0-2${i}"
@@ -1118,7 +1118,7 @@ Notice that the --server is set to use 127.0.0.1. This is because, this componen
 Worker Nodes:
 
 ```
-for i in 0 1; do
+for i in 0 1 2; do
 instance="${NAME}-worker-${i}" \
   external_ip=$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=${instance}" \
@@ -1134,7 +1134,7 @@ done
 Master Node:
 
 ```
-for i in 0; do
+for i in 0 1 2; do
 instance="${NAME}-master-${i}" \
   external_ip=$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=${instance}" \
@@ -1189,7 +1189,7 @@ EOF
 Send the encryption file to the Controller nodes using scp and a for loop.
 
 ```
-for i in 0; do
+for i in 0 1 2; do
 instance="${NAME}-master-${i}" \
   external_ip=$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=${instance}" \
@@ -1207,7 +1207,6 @@ TIPS: Use a terminal multi-plexer like multi-tabbed putty or tmux to work with m
 
 The primary purpose of the etcd component is to store the state of the cluster. This is because Kubernetes itself is stateless. Therefore, all its stateful data will persist in etcd. Since Kubernetes is a distributed system – it needs a distributed storage to keep persistent data in it. etcd is a highly-available key value store that fits the purpose. All K8s cluster configurations are stored in a form of key value pairs in etcd, it also stores the actual and desired states of the cluster. etcd cluster is intelligent enough to watch for changes made on one instance and almost instantly replicate those changes to the rest of the instances, so all of them will be always reconciled.
 
-NOTE: Don't not just copy and paste the commands, ensure that you go through each and understand exactly what they will do on your servers. Use tools like tmux to make it easy to run commands on multiple terminal screens at once.
 
 1. SSH into the controller server
 
@@ -1218,6 +1217,24 @@ master_1_ip=$(aws ec2 describe-instances \
 --filters "Name=tag:Name,Values=${NAME}-master-0" \
 --output text --query 'Reservations[].Instances[].PublicIpAddress')
 ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${master_1_ip}
+```
+
+Master-2
+
+```
+master_2_ip=$(aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=${NAME}-master-1" \
+--output text --query 'Reservations[].Instances[].PublicIpAddress')
+ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${master_2_ip}
+```
+
+Master-3
+
+```
+master_3_ip=$(aws ec2 describe-instances \
+--filters "Name=tag:Name,Values=${NAME}-master-2" \
+--output text --query 'Reservations[].Instances[].PublicIpAddress')
+ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${master_3_ip}
 ```
 
 2. Download and install etcd
