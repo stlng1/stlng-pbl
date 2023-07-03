@@ -1216,7 +1216,7 @@ Master-1
 master_1_ip=$(aws ec2 describe-instances \
 --filters "Name=tag:Name,Values=${NAME}-master-0" \
 --output text --query 'Reservations[].Instances[].PublicIpAddress')
-ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${master_1_ip}
+ssh -i ../ssh/k8s-cluster-from-ground-up.id_rsa ubuntu@${master_1_ip}
 ```
 
 Master-2
@@ -1225,7 +1225,7 @@ Master-2
 master_2_ip=$(aws ec2 describe-instances \
 --filters "Name=tag:Name,Values=${NAME}-master-1" \
 --output text --query 'Reservations[].Instances[].PublicIpAddress')
-ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${master_2_ip}
+ssh -i ../ssh/k8s-cluster-from-ground-up.id_rsa ubuntu@${master_2_ip}
 ```
 
 Master-3
@@ -1234,7 +1234,7 @@ Master-3
 master_3_ip=$(aws ec2 describe-instances \
 --filters "Name=tag:Name,Values=${NAME}-master-2" \
 --output text --query 'Reservations[].Instances[].PublicIpAddress')
-ssh -i k8s-cluster-from-ground-up.id_rsa ubuntu@${master_3_ip}
+ssh -i ../ssh/k8s-cluster-from-ground-up.id_rsa ubuntu@${master_3_ip}
 ```
 
 2. Download and install etcd
