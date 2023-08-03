@@ -1,116 +1,100 @@
 ## Deploying Applications Into Kubernetes Cluster
 
-Project Repo: 
+**Project Repo:** https://github.com/stlng1/k8s-web-app-deploy.git
 
-Create a Pod yaml manifest on your master node
 
+**Dependencies:**
+
+a. make sure docker is installed and running
+
+b. make sure minikube is installed and running.
+
+## DEPLOYING APP TO CLUSTER
+
+1. Create a Pod yaml manifest on your master node
+
+```
 sudo cat <<EOF | sudo tee ./nginx-pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-name: nginx-pod
+  name: nginx-pod
 spec:
-containers:
-- image: nginx:latest
-name: nginx-pod
-ports:
-- containerPort: 80
-  protocol: TCP
+  containers:
+  - image: nginx:latest
+    name: nginx-pod
+    ports:
+    - containerPort: 80
+      protocol: TCP
 EOF
-Apply the manifest with the help of kubectl
+```
 
+2. Apply the manifest with the help of kubectl
+
+```
 kubectl apply -f nginx-pod.yaml
-Output:
+```
 
-pod/nginx-pod created
-Get an output of the pods running in the cluster
+![k8s](./images/p22a_cli_01.png)
+
+
+3. Get an output of the pods running in the cluster
+
+```
 kubectl get pods
-Output:
+```
 
-NAME        READY   STATUS    RESTARTS   AGE
-nginx-pod   1/1     Running   0          19m
-If the Pods were not ready for any reason, for example if there are no worker nodes, you will see something like the below output.
-NAME        READY   STATUS    RESTARTS   AGE
-nginx-pod   0/1     Pending   0          111s
-To see other fields introduced by kubernetes after you have deployed the resource, simply run below command, and examine the output. You will see other fields that kubernetes updates from time to time to represent the state of the resource within the cluster. -o simply means the output format.
+![k8s](./images/p22a_cli_02.png)
+
+1. To see other fields introduced by kubernetes after you have deployed the resource, simply run below command, and examine the output. -o simply means the output format.
+
+```
 kubectl get pod nginx-pod -o yaml 
+
 or
 
 kubectl describe pod nginx-pod
+```
 
-ACCESSING THE APP FROM THE BROWSER
-Now you have a running Pod. What’s next?
+## ACCESSING THE APP FROM THE BROWSER
 
-The ultimate goal of any solution is to access it either through a web portal or some application (e.g., mobile app). We have a Pod with Nginx container, so we need to access it from the browser. But all you have is a running Pod that has its own IP address which cannot be accessed through the browser. To achieve this, we need another Kubernetes object called Service to accept our request and pass it on to the Pod.
+A service is an object that accepts requests on behalf of the Pods and forwards it to the Pod’s IP address, since there is no way to reach it directly from the outside world.
 
-A service is an object that accepts requests on behalf of the Pods and forwards it to the Pod’s IP address. If you run the command below, you will be able to see the Pod’s IP address. But there is no way to reach it directly from the outside world.
+1. To see the Pod’s IP address, run the command below:  
 
+```
 kubectl get pod nginx-pod  -o wide 
-Output:
+```
 
-NAME        READY   STATUS    RESTARTS   AGE    IP               NODE                                              NOMINATED NODE   READINESS GATES
-nginx-pod   1/1     Running   0          138m   172.50.202.214   ip-172-50-202-161.eu-central-1.compute.internal   <none>           <none>
-Let us try to access the Pod through its IP address from within the K8s cluster. To do this,
+![k8s](./images/p22a_cli_03.png)
 
-We need an image that already has curl software installed. You can check it out here
-dareyregistry/curl
-Run kubectl to connect inside the container
+Let us try to access the Pod through its IP address from within the K8s cluster. To do this:
 
+2. We need an image that already has curl software installed. we can find one at dockerhub - dareyregistry/curl
+
+3. Run kubectl to connect inside the container
+
+```
 kubectl run curl --image=dareyregistry/curl -i --tty
-Run curl and point to the IP address of the Nginx Pod (Use the IP address of your own Pod)
+```
 
-# curl -v 172.50.202.214:80
-Output:
+4. Run curl and point to the IP address of the Nginx Pod (Use the IP address from step 1 above)
+   
+```
+curl -v <Pod's IP address>:80
+```
+![k8s](./images/p22a_cli_04.png)
 
-> GET / HTTP/1.1
-> User-Agent: curl/7.35.0
-> Host: 172.50.202.214
-> Accept: */*
-> 
-< HTTP/1.1 200 OK
-< Server: nginx/1.21.0
-< Date: Sat, 12 Jun 2021 21:12:56 GMT
-< Content-Type: text/html
-< Content-Length: 612
-< Last-Modified: Tue, 25 May 2021 12:28:56 GMT
-< Connection: keep-alive
-< ETag: "60aced88-264"
-< Accept-Ranges: bytes
-< 
-<!DOCTYPE html>
-<html>
-<head>
-<title>Welcome to nginx!</title>
-<style>
-    body {
-        width: 35em;
-        margin: 0 auto;
-        font-family: Tahoma, Verdana, Arial, sans-serif;
-    }
-</style>
-</head>
-<body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
-</body>
-</html>
 If the use case for your solution is required for internal use ONLY, without public Internet requirement. Then, this should be OK. But in most cases, it is NOT!
 
-Assuming that your requirement is to access the Nginx Pod internally, using the Pod’s IP address directly as above is not a reliable choice because Pods are ephemeral. They are not designed to run forever. When they die and another Pod is brought back up, the IP address will change and any application that is using the previous IP address directly will break.
+**Accessing App from Internet:**
 
-To solve this problem, kubernetes uses Service – An object that abstracts the underlining IP addresses of Pods. A service can serve as a load balancer, and a reverse proxy which basically takes the request using a human readable DNS name, resolves to a Pod IP that is running and forwards the request to it. This way, you do not need to use an IP address. Rather, you can simply refer to the service name directly.
-
-Let us create a service to access the Nginx Pod
+1. Let us create a service to access the Nginx Pod
 
 Create a Service yaml manifest file:
+
+```
 sudo cat <<EOF | sudo tee ./nginx-service.yaml
 apiVersion: v1
 kind: Service
@@ -124,40 +108,38 @@ spec:
       port: 80
       targetPort: 80
 EOF
-Create a nginx-service resource by applying your manifest
+```
+
+6. Create an nginx-service resource by applying your manifest
+
+```
 kubectl apply -f nginx-service.yaml
-output:
+```
 
-service/nginx-service created
 Check the created service
+
+```
 kubectl get service
-output:
+```
 
-NAME            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-kubernetes      ClusterIP   10.100.0.1      <none>        443/TCP   68d
-nginx-service   ClusterIP   10.100.71.130   <none>        80/TCP    85s
-Observation:
+![k8s](./images/p22a_cli_05.png)
 
-The TYPE column in the output shows that there are different service types.
 
-ClusterIP
-NodePort
-LoadBalancer &
-Headless Service
-Since we did not specify any type, it is obvious that the default type is ClusterIP
+7. Since there is no public IP address for accesing the app, we can leverage kubectl's port-forward functionality.
 
-Now that we have a service created, how can we access the app? Since there is no public IP address, we can leverage kubectl's port-forward functionality.
+```
+kubectl port-forward svc/nginx-service 8089:80
+```
 
-kubectl  port-forward svc/nginx-service 8089:80
 8089 is an arbitrary port number on your laptop or client PC, and we want to tunnel traffic through it to the port number of the nginx-service 80.
 
+![k8s](./images/p22a_image_01.png)
 
+The nginx service should be able to select the right Pod to route this traffic to. For this, you must reconfigure the Pod manifest and introduce labels to match the selectors key in the field section of the service manifest.
 
-Unfortunately, this will not work quite yet. Because there is no way the service will be able to select the actual Pod it is meant to route traffic to. If there are hundreds of Pods running, there must be a way to ensure that the service only forwards requests to the specific Pod it is intended for.
+8. Update the Pod manifest with the below and apply the manifest:
 
-To make this work, you must reconfigure the Pod manifest and introduce labels to match the selectors key in the field section of the service manifest.
-
-Update the Pod manifest with the below and apply the manifest:
+```
 apiVersion: v1
 kind: Pod
 metadata:
@@ -171,19 +153,304 @@ spec:
     ports:
     - containerPort: 80
       protocol: TCP
+```
+
 Notice that under the metadata section, we have now introduced labels with a key field called app and its value nginx-pod. This matches exactly the selector key in the service manifest.
 
-The key/value pairs can be anything you specify. These are not Kubernetes specific keywords. As long as it matches the selector, the service object will be able to route traffic to the Pod.
+9. Apply the manifest with:
 
-Apply the manifest with:
-
+```
 kubectl apply -f nginx-pod.yaml
-Run kubectl port-forward command again
-kubectl  port-forward svc/nginx-service 8089:80
-output:
+```
 
+10. Run kubectl port-forward command again
+
+```
 kubectl  port-forward svc/nginx-service 8089:80
-Forwarding from 127.0.0.1:8089 -> 80
-Forwarding from [::1]:8089 -> 80
-Then go to your web browser and enter localhost:8089 – You should now be able to see the nginx page in the browser.
+```
+
+![k8s](./images/p22a_cli_06.png)
+
+
+11. Then go to your web browser and enter localhost:8089 – You should now be able to see the nginx page in the browser.
+
+![k8s](./images/p22a_web_01.png)
+
+
+## CREATE A REPLICA SET
+
+1. Let us create a *rs.yaml* manifest for a ReplicaSet object:
+
+```
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-rs
+  labels:
+    app: nginx-pod
+    tier: nginx-pod
+spec:
+  # modify replicas according to your case
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: nginx-pod
+  template:
+    metadata:
+      labels:
+        tier: nginx-pod
+    spec:
+      containers:
+      - name: nginx-pod
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+          protocol: TCP    
+```
+
+
+2. apply *rs.yaml* manifest for a ReplicaSet object:
+
+```
+kubectl apply -f rs.yaml
+```
+
+```
+kubectl get pods
+```
+
+![k8s](./images/p22a_cli_07.png)
+
+Notice three ngix-pods with some random suffixes created and named automatically by some other object (higher level of abstraction) such as ReplicaSet.
+
+3. Try to delete one of the Pods:
+
+```
+kubectl delete po nginx-pod-j784r
+```
+
+```
+kubectl get pods
+```
+
+![k8s](./images/p22a_cli_06.png)
+
+
+You can see, that we still have all 3 Pods; another one has been recreated to replace the deleted one.
+
+
+**Scale ReplicaSet up and down:**
+
+In general, there are 2 approaches of Kubernetes Object Management: imperative and declarative.
+
+Let us see how we can use both to scale our Replicaset up and down:
+
+**Imperative:**
+
+4. We can easily scale our ReplicaSet up by specifying the desired number of replicas in an imperative command, like this:
+
+```
+kubectl scale rs nginx-rs --replicas=5
+replicationcontroller/nginx-rc scaled
+```
+
+```
+kubectl get pods
+```
+
+![k8s](./images/p22a_cli_08.png)
+
+
+5. Scaling down will work the same way, so scale it down to 3 replicas.
+
+**Declarative:**
+
+6. Declarative way would be to open our rs.yaml manifest, change desired number of replicas in respective section
+
+```
+spec:
+  replicas: 2
+```
+
+7. Apply the updated manifest:
+
+```
+kubectl apply -f rs.yaml
+```
+
+![k8s](./images/p22a_cli_09.png)
+
+
+## USING DEPLOYMENT CONTROLLERS
+
+1. create *deployment.yaml*
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    tier: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        tier: frontend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+```
+
+2. Apply
+
+```
+kubectl apply -f deployment.yaml
+```
+
+**Run commands to get the following:**
+
+3. Get the Deployment
+
+```
+kubectl get deployments
+```
+
+![k8s](./images/p22a_cli_11.png)
+
+
+4. Get the ReplicaSet
+
+```
+kubectl get rs
+```
+
+![k8s](./images/p22a_cli_12.png)
+
+
+5. Get the Pods
+
+```
+kubectl get pods
+```
+
+![k8s](./images/p22a_cli_13.png)
+
+
+6. Scale the replicas in the Deployment to 15 Pods
+   
+update ReplicaSet in *deployment.yaml* to 15, then apply 
+
+```
+kubectl apply -f deployment.yaml
+```
+
+![k8s](./images/p22a_cli_14.png)
+
+
+7. Exec into one of the Pod’s container to run Linux commands:
+
+```
+kubectl exec -it nginx-deployment-6449ddf89d-5fkbj bash
+```
+
+8. List the files and folders in the Nginx directory
+
+```
+ls -ltr /etc/nginx/
+```
+
+![k8s](./images/p22a_cli_15.png)
+
+9. Check the content of the default Nginx configuration file
+
+```
+cat  /etc/nginx/conf.d/default.conf
+```
+
+![k8s](./images/p22a_cli_16.png)
+
+
+## PERSISTING DATA FOR PODS
+
+Deployments are stateless by design. Hence, any data stored inside the Pod’s container does not persist when the Pod dies.
+
+If you were to update the content of the index.html file inside the container, and the Pod dies, that content will not be lost since a new Pod will replace the dead one.
+
+Let us try that:
+
+1. Scale the Pods down to 1 replica. Edit the *deployment.yaml*
+
+![k8s](./images/p22a_cli_17.png)
+
+2. Exec into the running container (figure out the command yourself)
+
+```
+kubectl exec -it nginx-deployment-6449ddf89d-hhd97 bash
+```
+
+3. Install vim so that you can edit the file
+
+```
+apt-get update
+apt-get install vim
+```
+
+4. Update the content of the file and add the code below 
+   
+```
+vi /usr/share/nginx/html/index.html
+```
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to STRANGENIG.IO!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to STRANGENIG.IO!</h1>
+<p>I love experiencing Kubernetes</p>
+
+<p>Learning by doing is absolutely the best strategy at 
+<a href="https://strangenig.io/">www.strangenig.io</a>.<br/>
+for skills acquisition
+<a href="https://strangenig.io/">www.strangenig.io</a>.</p>
+
+<p><em>Thank you for learning from STRANGENIG.IO</em></p>
+</body>
+</html>
+```
+
+Check the browser – You should see this
+
+![k8s](./images/p22a_web_02.png)
+
+5. Now, delete the only running Pod
+
+```
+kubectl delete po nginx-deployment-6449ddf89d-hhd97
+```
+
+![k8s](./images/p22a_cli_18.png)
+
+Refresh the web page – You will see that the content you saved in the container is no longer there. That is because Pods do not store data when they are being recreated – that is why they are called ephemeral or stateless. 
+
+![k8s](./images/p22a_web_03.png)
+
+
 
