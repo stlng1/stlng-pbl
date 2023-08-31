@@ -421,28 +421,426 @@ Terraform plan
 ![eks](./images/p24_cli_01.png)
 
 
-14. Create kubeconfig file using awscli.
+14. Create new infrastructure by running Terraform apply:
+    
+```
+terraform apply
+```    
+
+![eks](./images/p24_cli_02.png)
+
+![eks](./images/p24_web_01.png)
+
+15. Create kubeconfig file using awscli
 
 ```
-aws eks update-kubecofig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
+aws eks update-kubeconfig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
 ```
 
+## INSTALL HELM
+
+16. Install Helm
+
+```
+curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+sudo apt-get install apt-transport-https --yes
+echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt-get update
+sudo apt-get install helm
+```
+
+17. Check that Helm is installed
+
+```
+helm version
+```
+
+![eks](./images/p24_cli_03.png)
 
 
 
 
-Run Terraform apply
+
+## INSTALLING kubectl plugin - konfig
+
+In order to avoid calling the [kubeconfig file] everytime, we would introduce a kubectl plugin called [konfig] to select an active or default kubeconfig file. This is necessary because it is possible to haave more than one cluster running and therefore more than one kubeconfig file in use. The default kubeconfig file in the location ~/.kube/config. 
+
+
+1. Install a package manager for kubectl called **krew** to enable you to install plugins to extend the functionality of kubectl. 
+
+```
+kubectl krew install konfig
+```
+
+2. Import the kubeconfig into the default kubeconfig file. Ensure to accept the prompt to overide.
+
+```
+sudo kubectl konfig import --save  [kubeconfig file]
+```
+
+![eks](./images/p24_cli_09.png)
+
+3. Show all the contexts – Meaning all the clusters configured in your kubeconfig. If you have more than 1 Kubernetes clusters configured, you will see them all in the output.
+
+```
+kubectl config get-contexts
+```
+
+![eks](./images/p24_cli_10.png)
+
+4. Set the current context to use for all kubectl and helm commands
+
+```
+kubectl config use-context [name of EKS cluster]
+```
+
+![eks](./images/p24_cli_11.png)
+
+5. Test that it is working without specifying the --kubeconfig flag
+
+```
+kubectl get po
+```
+
+![eks](./images/p24_cli_12.png)
+
+
+6. Display the current context. This will let you know the context in which you are using to interact with Kubernetes.
+
+```
+kubectl config current-context
+```
+
+![eks](./images/p24_cli_13.png)
 
 
 
-This will begin to create cloud resources, and fail at some point with the error
+## DEPLOY JENKINS WITH HELM
 
-╷
-│ Error: Post "http://localhost/api/v1/namespaces/kube-system/configmaps": dial tcp [::1]:80: connect: connection refused
-│ 
-│   with module.eks-cluster.kubernetes_config_map.aws_auth[0],
-│   on .terraform/modules/eks-cluster/aws_auth.tf line 63, in resource "kubernetes_config_map" "aws_auth":
-│   63: resource "kubernetes_config_map" "aws_auth" {
-That is because for us to connect to the cluster using the kubeconfig, Terraform needs to be able to connect and set the credentials correctly.
+18. Lets make use of publicly available charts from Artifact Hub to find packaged Jenkins applications as Helm Charts
 
-Let fix the problem in the next section.
+19. Add the repository to helm so that you can easily download and deploy
+
+```
+helm repo add jenkins https://charts.jenkins.io
+
+helm repo update 
+```
+
+20. Create namespace
+
+```
+kubectl create namespace [Namespace]
+```
+*(kubectl create namespace k-space)*
+
+21. Install the Jenkins Helm chart with release name *jenkins-k*
+
+```
+helm install [RELEASE_NAME] jenkins/jenkins [Namespace]
+```
+*(helm install jenkins-k jenkins/jenkins k-space)*
+
+You should see an output like this
+
+![eks](./images/p24_cli_04.png)
+
+
+22. Check the Helm deployment
+
+``` 
+helm ls
+```
+
+![eks](./images/p24_cli_05.png)
+
+
+1.  Check the pods 
+
+```
+kubectl get pods
+```
+
+![eks](./images/p24_cli_06.png)
+
+24. Describe the running pod
+
+```
+kubectl describe pod jenkins-0 
+```
+
+![eks](./images/p24_cli_07.png)
+
+25. Check the logs of the running pod. There is more than one container inside the pod, so we need to let kubectl know, which pod we are interested to see its log.
+
+```
+kubectl logs jenkins-0 -c jenkins 
+```
+
+![eks](./images/p24_cli_08.png)
+
+
+## ACCESS JENKINS UI
+
+Lets get access to the Jenkins UI without the --kubeconfig flag.
+  
+1. From step 21 above, get the password to the admin user
+
+```
+kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
+```
+
+2. Use port forwarding to access Jenkins from the UI
+  
+```  
+kubectl --namespace default port-forward svc/jenkins 8080:8080
+```
+
+3. Go to the browser *localhost:8080* and authenticate with the username and password from number 1 above
+
+![eks](./images/p24_cli_14.png)
+
+![eks](./images/p24_web_02.png)
+
+
+## QUICK TASK FOR YOU
+Now setup the following tools using Helm
+This section will be quite challenging for you because you will need to spend some time to research the charts, read their documentations and understand how to get an application running in your cluster by simply running a helm install command.
+
+## Installing Artifactory
+
+1. Add JFrog Helm chart repository
+   
+```
+helm repo add jfrog https://charts.jfrog.io
+helm repo update
+```
+   
+2. To install the chart with the release name *artifactory-k*:
+
+```
+helm upgrade --install artifactory-k jfrog/artifactory --namespace k-space
+```
+3. Get all the pods within the *k-space* namespace
+
+```
+kubectl get pods
+```
+
+![eks](./images/p24_cli_15.png)
+
+## Install Consul
+
+Add the HashiCorp Helm Repository:
+
+ helm repo add hashicorp https://helm.releases.hashicorp.com
+ "hashicorp" has been added to your repositories
+Copy
+Verify that you have access to the consul chart:
+
+ helm search repo hashicorp/consul
+NAME                CHART VERSION   APP VERSION DESCRIPTION
+hashicorp/consul    1.0.1           1.14.1      Official HashiCorp Consul Chart
+Copy
+Before you install Consul on Kubernetes with Helm, ensure that the consul Kubernetes namespace does not exist. We recommend installing Consul on a dedicated namespace.
+
+ kubectl get namespace
+NAME              STATUS   AGE
+default           Active   18h
+kube-node-lease   Active   18h
+kube-public       Active   18h
+kube-system       Active   18h
+Copy
+Install Consul on Kubernetes using Helm. The Helm chart does everything to set up your deployment: after installation, agents automatically form clusters, elect leaders, and run the necessary agents.
+
+Run the following command to install the latest version of Consul on Kubernetes with its default configuration.
+
+ helm install consul hashicorp/consul --set global.name=consul --create-namespace --namespace consul
+Copy
+You can also install Consul on a dedicated namespace of your choosing by modifying the value of the -n flag for the Helm install.
+
+
+## Installing Hashicorp Vault
+
+We will deploy a Vault cluster in High Availability mode using Hashicorp Consul and we will use AWS KMS to auto unseal our Vault.
+
+1. Add Vault Helm chart repository
+   
+```
+helm repo add hashicorp https://helm.releases.hashicorp.com
+helm repo update
+helm search repo hashicorp/vault
+```
+
+2. To install Vault Helm chart with the release name *vault-k*:
+
+```
+helm install vault-k hashicorp/vault k-space
+```
+
+3. Get all the pods within the *k-space* namespace
+
+```
+kubectl get pods
+```
+
+![eks](./images/p24_cli_16.png)
+
+The vault-0, vault-1, and vault-2 pods deployed run a Vault server and report that they are Running but that they are not ready (0/1). This is because the status check defined in a readinessProbe returns a non-zero exit code.
+
+4. Retrieve the status of Vault on the pod.
+   
+![eks](./images/p24_cli_17.png)
+
+
+## Initialize and unseal one Vault pod
+
+Vault starts uninitialized and in the sealed state. Prior to initialization the Integrated Storage backend is not prepared to receive data.For Vault to authenticate with Kubernetes and manage secrets requires that that is initialized and unsealed.
+
+5. Initialize and unseal Vault
+   
+```
+kubectl exec --stdin=true --tty=true vault-0 -- vault operator init
+```
+
+![eks](./images/p24_cli_18.png)
+
+The output displays the key shares and initial root key generated.
+
+
+Unseal Key 1: MBFSDepD9E6whREc6Dj+k3pMaKJ6cCnCUWcySJQymObb
+Unseal Key 2: zQj4v22k9ixegS+94HJwmIaWLBL3nZHe1i+b/wHz25fr
+Unseal Key 3: 7dbPPeeGGW3SmeBFFo04peCKkXFuuyKc8b2DuntA4VU5
+Unseal Key 4: tLt+ME7Z7hYUATfWnuQdfCEgnKA2L173dptAwfmenCdf
+Unseal Key 5: vYt9bxLr0+OzJ8m7c7cNMFj7nvdLljj0xWRbpLezFAI9
+
+Initial Root Token: s.zJNwZlRrqISjyBHFMiEca6GF
+
+6. Unseal the Vault server using the unseal keys until the key threshold is met.
+   
+```
+kubectl exec --stdin=true --tty=true vault-0 -- vault operator unseal 
+```
+When prompted, enter the Unseal Key value.
+
+![eks](./images/p24_cli_19.png)
+
+
+
+Unseal Key (will be hidden):
+Copy
+
+
+ kubectl exec --stdin=true --tty=true vault-0 -- vault operator unseal 
+Unseal Key (will be hidden):
+Copy
+When prompted, enter the Unseal Key 2 value.
+
+ kubectl exec --stdin=true --tty=true vault-0 -- vault operator unseal 
+Unseal Key (will be hidden):
+Copy
+When prompted, enter the Unseal Key 3 value.
+
+7. Validate that Vault is up and running.
+
+```
+kubectl get pods --selector='app.kubernetes.io/name=vault'
+```
+
+![eks](./images/p24_cli_20.png)
+
+
+NAME                                    READY   STATUS    RESTARTS   AGE
+vault-0                                 1/1     Running   0          1m49s
+vault-1                                 1/1     Running   0          1m49s
+Copy
+
+7. Display all Vault services.
+
+```
+kubectl get services -n vault --selector='app.kubernetes.io/name=vault-ui'
+```
+
+![eks](./images/p24_cli_21.png)
+
+NAME       TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+vault-ui   NodePort   10.97.113.241   <none>        8200:30096/TCP   16d
+Copy
+
+8. Display the nodes of the cluster.
+
+```
+kubectl get nodes
+```
+
+NAME           STATUS   ROLES                  AGE   VERSION
+172.16.0.134   Ready    <none>                 16d   v1.21.6
+172.16.0.53    Ready    <none>                 16d   v1.21.6
+172.16.0.63    Ready    control-plane,master   16d   v1.21.6
+172.16.0.97    Ready    control-plane,master   16d   v1.21.6
+Copy
+Install the HashiCorp tap, a repository of all our Homebrew packages.
+
+ brew tap hashicorp/tap
+Copy
+Install Vault with hashicorp/tap/vault.
+
+ brew install hashicorp/tap/vault
+Copy
+Set the VAULT_ADDR environment variable. Since we exposed Vault using NodePort, Vault will be available at 172.16.0.97:8200. Access it from your bastion host or VPN from the optional step.
+
+ export VAULT_ADDR='http://172.16.0.97:30096'
+Copy
+Set the VAULT_TOKEN environment variable value to the initial root token value generated during the Vault initialization.
+
+ export VAULT_TOKEN="s.zJNwZlRrqISjyBHFMiEca6GF"
+Copy
+Enable the kv secrets engine.
+
+ vault secrets enable -path=kv kv
+
+Success! Enabled the kv secrets engine at: kv/
+Copy
+Store some test data at kv/hello.
+
+ vault kv put kv/hello target=world
+
+Key                Value
+---                -----
+created_time       2022-03-21T21:23:00.540998543Z
+custom_metadata    <nil>
+deletion_time      n/a
+destroyed          false
+version            1
+Copy
+Read the stored data to verify.
+
+ vault kv get kv/hello
+
+======= Metadata =======
+Key                Value
+---                -----
+created_time       2022-03-21T21:23:00.540998543Z
+custom_metadata    <nil>
+deletion_time      n/a
+destroyed          false
+version            1
+
+===== Data =====
+Key       Value
+---       -----
+target    world
+
+
+## Installing Prometheus
+Grafana
+Elasticsearch ELK using ECK
+Succesfully installing all the 5 tools is a great experience to have. But, joining the Masterclass you will be able to see how this should be done end to end.
+
+In the next project,
+
+You will write custom Helm charts
+Configure Ingress for all the tools and applications running in the cluster
+Integrate Secrets management using Hashicorp Vault
+Integrate Logging with ELK
+Inetegrate monitoring with Prometheus and Grafana
