@@ -408,6 +408,7 @@ provider "kubernetes" {
 
 ```
 
+
 13. Run:
 
 ```
@@ -432,12 +433,18 @@ terraform apply
 ![eks](./images/p24_web_01.png)
 
 
+Note: Uncomment *backend* section of backend.tf, then run steps 13 and 14 again.
+
+![eks](./images/p24_web_01a.png)
+
 15. Create kubeconfig file using awscli
 
 ```
 aws eks update-kubeconfig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
 ```
 (aws eks update-kubeconfig --name tooling-app-eks --region eu-west-3 --kubeconfig kubeconfig)
+
+![eks](./images/p24_cli_03.png)
 
 
 ## INSTALL HELM
@@ -457,9 +464,6 @@ sudo apt-get install helm
 ```
 helm version
 ```
-
-![eks](./images/p24_cli_03.png)
-
 
 
 ## INSTALLING kubectl plugin - konfig
