@@ -431,11 +431,14 @@ terraform apply
 
 ![eks](./images/p24_web_01.png)
 
+
 15. Create kubeconfig file using awscli
 
 ```
 aws eks update-kubeconfig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
 ```
+(aws eks update-kubeconfig --name tooling-app-eks --region eu-west-3 --kubeconfig kubeconfig)
+
 
 ## INSTALL HELM
 
@@ -456,8 +459,6 @@ helm version
 ```
 
 ![eks](./images/p24_cli_03.png)
-
-
 
 
 
@@ -603,9 +604,6 @@ kubectl --namespace default port-forward svc/jenkins 8080:8080
 ![eks](./images/p24_web_02.png)
 
 
-## QUICK TASK FOR YOU
-Now setup the following tools using Helm
-This section will be quite challenging for you because you will need to spend some time to research the charts, read their documentations and understand how to get an application running in your cluster by simply running a helm install command.
 
 ## Installing Artifactory
 
@@ -628,6 +626,8 @@ kubectl get pods
 ```
 
 ![eks](./images/p24_cli_15.png)
+
+
 
 ## Install Consul
 
@@ -662,9 +662,17 @@ You can also install Consul on a dedicated namespace of your choosing by modifyi
 
 ## Installing Hashicorp Vault
 
-We will deploy a Vault cluster in High Availability mode using Hashicorp Consul and we will use AWS KMS to auto unseal our Vault.
+We will deploy a Vault cluster in High Availability (HA) mode using Hashicorp Consul and we will use AWS KMS to auto unseal our Vault.
 
-1. Add Vault Helm chart repository
+1. create the Kubernetes Secret with the IAM user's access key and secret key to authenticate to AWS.
+
+```
+kubectl create secret generic -n vault eks-creds \
+    --from-literal=AWS_ACCESS_KEY_ID="" \
+    --from-literal=AWS_SECRET_ACCESS_KEY=""
+```  
+
+2. Add Vault Helm chart repository
    
 ```
 helm repo add hashicorp https://helm.releases.hashicorp.com
@@ -672,10 +680,140 @@ helm repo update
 helm search repo hashicorp/vault
 ```
 
-2. To install Vault Helm chart with the release name *vault-k*:
+3. Create *override.yaml* file to override default helm configurations:
 
 ```
-helm install vault-k hashicorp/vault k-space
+# Vault Helm Chart Value Overrides
+global:
+  enabled: true
+
+injector:
+  enabled: true
+  # Use the Vault K8s Image https://github.com/hashicorp/vault-k8s/
+  image:
+    repository: "hashicorp/vault-k8s"
+    tag: "latest"
+
+  resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 256Mi
+        cpu: 250m
+
+server:
+  # This configures the Vault Statefulset to create a PVC for data
+  # storage when using the file or raft backend storage engines.
+  # See https://www.vaultproject.io/docs/configuration/storage/index.html to know more
+  dataStorage:
+    enabled: true
+    # Size of the PVC created
+    size: 20Gi
+    # Location where the PVC will be mounted.
+    mountPath: "/vault/data"
+    # Name of the storage class to use.  If null it will use the
+    # configured default Storage Class.
+    storageClass: null
+    # Access Mode of the storage device being used for the PVC
+    accessMode: ReadWriteOnce
+    # Annotations to apply to the PVC
+    annotations: {}
+
+  # Use the Enterprise Image
+  image:
+    repository: "hashicorp/vault"
+    tag: "latest"
+
+  # These Resource Limits are in line with node requirements in the
+  # Vault Reference Architecture for a Small Cluster
+  resources:
+    requests:
+      memory: 8Gi
+      cpu: 2000m
+    limits:
+      memory: 16Gi
+      cpu: 2000m
+
+  # For HA configuration and because we need to manually init the vault,
+  # we need to define custom readiness/liveness Probe settings
+  readinessProbe:
+    enabled: true
+    path: "/v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204"
+  livenessProbe:
+    enabled: true
+    path: "/v1/sys/health?standbyok=true"
+    initialDelaySeconds: 60
+
+  # This configures the Vault Statefulset to create a PVC for audit logs.
+  # See https://www.vaultproject.io/docs/audit/index.html to know more
+  auditStorage:
+    enabled: true
+
+  standalone:
+    enabled: false
+
+  # Authentication to AWS for auto unseal
+  extraSecretEnvironmentVars:
+    - envName: AWS_ACCESS_KEY_ID
+      secretName: eks-creds
+      secretKey: AWS_ACCESS_KEY_ID
+    - envName: AWS_SECRET_ACCESS_KEY
+      secretName: eks-creds
+      secretKey: AWS_SECRET_ACCESS_KEY
+
+  # Run Vault in "HA" mode.
+  ha:
+    enabled: true
+    replicas: 3
+    raft:
+      enabled: true
+      setNodeId: false
+
+      config: |
+        ui = true
+
+        listener "tcp" {
+          tls_disable = 1
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+        }
+
+        seal "awskms" {
+          region     = "us-east-1"
+          kms_key_id = ""
+        }
+
+        storage "raft" {
+          path = "/vault/data"
+
+          retry_join {
+          leader_api_addr = "http://vault-0.vault-internal:8200"
+          }
+          retry_join {
+          leader_api_addr = "http://vault-1.vault-internal:8200"
+          }
+          retry_join {
+          leader_api_addr = "http://vault-2.vault-internal:8200"
+          }
+        }
+
+        service_registration "kubernetes" {}
+
+# Vault UI
+ui:
+  enabled: true
+  serviceType: "LoadBalancer"
+  serviceNodePort: null
+  externalPort: 8200
+```
+
+4. To install Vault Helm chart with the release name *vault-k*:
+
+```
+helm install vault-k hashicorp/vault \
+    -f ./override.yaml \
+    -n k-space
 ```
 
 3. Get all the pods within the *k-space* namespace
@@ -686,7 +824,7 @@ kubectl get pods
 
 ![eks](./images/p24_cli_16.png)
 
-The vault-0, vault-1, and vault-2 pods deployed run a Vault server and report that they are Running but that they are not ready (0/1). This is because the status check defined in a readinessProbe returns a non-zero exit code.
+Note from the status check that pods are running but that they are not ready (0/1).
 
 4. Retrieve the status of Vault on the pod.
    
@@ -700,7 +838,7 @@ Vault starts uninitialized and in the sealed state. Prior to initialization the 
 5. Initialize and unseal Vault
    
 ```
-kubectl exec --stdin=true --tty=true vault-0 -- vault operator init
+kubectl exec --stdin=true --tty=true vault-0 -n k-space -- vault-k operator init
 ```
 
 ![eks](./images/p24_cli_18.png)
@@ -719,41 +857,21 @@ Initial Root Token: s.zJNwZlRrqISjyBHFMiEca6GF
 6. Unseal the Vault server using the unseal keys until the key threshold is met.
    
 ```
-kubectl exec --stdin=true --tty=true vault-0 -- vault operator unseal 
+kubectl exec --stdin=true --tty=true vault-0 -n k-space -- vault-k operator unseal
 ```
-When prompted, enter the Unseal Key value.
+
+When prompted, enter the Unseal Key value. Repeat process for next vault with a different unseal key value.
 
 ![eks](./images/p24_cli_19.png)
 
-
-
-Unseal Key (will be hidden):
-Copy
-
-
- kubectl exec --stdin=true --tty=true vault-0 -- vault operator unseal 
-Unseal Key (will be hidden):
-Copy
-When prompted, enter the Unseal Key 2 value.
-
- kubectl exec --stdin=true --tty=true vault-0 -- vault operator unseal 
-Unseal Key (will be hidden):
-Copy
-When prompted, enter the Unseal Key 3 value.
-
-7. Validate that Vault is up and running.
+7. Once complete, Vault will be unsealed and the other Pods will be auto-unsealed with KMS. Validate that Vault is up and running.
 
 ```
-kubectl get pods --selector='app.kubernetes.io/name=vault'
+kubectl get pods --selector='app.kubernetes.io/name=vault-k'
 ```
 
 ![eks](./images/p24_cli_20.png)
 
-
-NAME                                    READY   STATUS    RESTARTS   AGE
-vault-0                                 1/1     Running   0          1m49s
-vault-1                                 1/1     Running   0          1m49s
-Copy
 
 7. Display all Vault services.
 
@@ -778,32 +896,45 @@ NAME           STATUS   ROLES                  AGE   VERSION
 172.16.0.53    Ready    <none>                 16d   v1.21.6
 172.16.0.63    Ready    control-plane,master   16d   v1.21.6
 172.16.0.97    Ready    control-plane,master   16d   v1.21.6
-Copy
-Install the HashiCorp tap, a repository of all our Homebrew packages.
 
- brew tap hashicorp/tap
-Copy
-Install Vault with hashicorp/tap/vault.
 
- brew install hashicorp/tap/vault
-Copy
-Set the VAULT_ADDR environment variable. Since we exposed Vault using NodePort, Vault will be available at 172.16.0.97:8200. Access it from your bastion host or VPN from the optional step.
+8. Install the HashiCorp Vault.
 
+```
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+sudo apt update && sudo apt install vault
+```
+
+9. Set the VAULT_ADDR environment variable. Since we exposed Vault using NodePort, Vault will be available at 172.16.0.97:8200. Access it from your bastion host or VPN from the optional step.
+
+```
  export VAULT_ADDR='http://172.16.0.97:30096'
-Copy
-Set the VAULT_TOKEN environment variable value to the initial root token value generated during the Vault initialization.
+```
 
+10. Set the VAULT_TOKEN environment variable value to the initial root token value generated during the Vault initialization.
+
+```
  export VAULT_TOKEN="s.zJNwZlRrqISjyBHFMiEca6GF"
-Copy
-Enable the kv secrets engine.
+```
 
+11. Enable the kv secrets engine.
+
+```
  vault secrets enable -path=kv kv
+```
 
 Success! Enabled the kv secrets engine at: kv/
-Copy
-Store some test data at kv/hello.
 
+
+12. Store some test data at kv/hello.
+
+ ```
  vault kv put kv/hello target=world
+```
+
 
 Key                Value
 ---                -----
@@ -833,14 +964,83 @@ target    world
 
 
 ## Installing Prometheus
-Grafana
-Elasticsearch ELK using ECK
-Succesfully installing all the 5 tools is a great experience to have. But, joining the Masterclass you will be able to see how this should be done end to end.
 
-In the next project,
+1. Add Prometheus Helm chart repository
+   
+```
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+kubectl get pods
+```
 
-You will write custom Helm charts
-Configure Ingress for all the tools and applications running in the cluster
-Integrate Secrets management using Hashicorp Vault
-Integrate Logging with ELK
-Inetegrate monitoring with Prometheus and Grafana
+2. To install prometheus Helm chart with the release name *prom-k*:
+
+```
+helm install prom-k prometheus-community/prometheus k-space
+```
+
+3. Access to Prometheus UI
+
+Default port for Prometheus dashboard is 9090. We can forward port to host by command and consequently access the dashboard in the browser on http://localhost:9090.
+
+```
+kubectl port-forward &lt;prometheus-pod-name&gt; 9090 
+```
+
+## Installing Grafana
+
+1. Add Grafana Helm chart repository
+   
+```
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+```
+
+2. To install grafana Helm chart with the release name *grafana-k*:
+
+```
+helm install grafana-k grafana/grafana k-space
+```
+
+3. Check if everything is working fine and extract the external ip of node/ec2 instance:
+
+```
+kubectl get all -n grafana
+```
+
+4. Default port for grafana dashboard is 3000. We can forward port to host by command 
+
+```
+kubectl port-forward &lt;grafana-pod-name&gt; 3000  
+```
+
+5. Access the dashboard in the browser on http://<external_ip>:3000.
+
+
+
+## Elasticsearch ELK using ECK
+
+1. Add the Elastic Helm charts repo: 
+   
+```
+helm repo add elastic https://helm.elastic.co
+helm repo update
+```
+
+2. To install Elasticsearch using the eck-elasticsearch Helm Chart directly with the release name *elastic-k*:
+
+```
+helm install elastic-k elastic/eck-elasticsearch -n k-space 
+```
+
+3. Check if everything is working fine:
+
+```
+kubectl get pods
+```
+
+4. Once you successfully installed Elasticsearch, forward it to port 9200:
+
+```
+kubectl port-forward svc/elasticsearch-master 9200
+```
