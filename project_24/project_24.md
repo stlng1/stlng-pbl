@@ -443,6 +443,7 @@ Note: Uncomment *backend* section of backend.tf, then run steps 13 and 14 again.
 aws eks update-kubeconfig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
 ```
 (aws eks update-kubeconfig --name tooling-app-eks --region eu-west-3 --kubeconfig kubeconfig)
+aws eks --region eu-west-3 update-kubeconfig --name tooling-app-eks
 
 ![eks](./images/p24_cli_03.png)
 
@@ -468,22 +469,44 @@ helm version
 
 ## INSTALLING kubectl plugin - konfig
 
-In order to avoid calling the [kubeconfig file] everytime, we would introduce a kubectl plugin called [konfig] to select an active or default kubeconfig file. This is necessary because it is possible to haave more than one cluster running and therefore more than one kubeconfig file in use. The default kubeconfig file in the location ~/.kube/config. 
+In order to avoid calling the [kubeconfig file] everytime, we would introduce a kubectl plugin called [konfig] to select an active or default kubeconfig file. This is necessary because it is possible to have more than one cluster running and therefore more than one kubeconfig file in use. The default kubeconfig file is in the location ~/.kube/config. 
 
+1. Install a package manager for kubectl called **krew** to enable you to install plugins to extend the functionality of kubectl. Make sure that git is installed.
 
-1. Install a package manager for kubectl called **krew** to enable you to install plugins to extend the functionality of kubectl. 
+Run this command to download and install krew:
+
+```
+(
+  set -x; cd "$(mktemp -d)" &&
+  OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
+  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
+  KREW="krew-${OS}_${ARCH}" &&
+  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+  tar zxvf "${KREW}.tar.gz" &&
+  ./"${KREW}" install krew
+)
+```
+
+2. Add the $HOME/.krew/bin directory to your PATH environment variable. To do this, update your .bashrc or .zshrc file and append the following line:
+
+```
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+```
+
+and restart your shell.
+
+3. Run kubectl krew to install konfig.
 
 ```
 kubectl krew install konfig
 ```
 
-2. Import the kubeconfig into the default kubeconfig file. Ensure to accept the prompt to overide.
+4. Import the kubeconfig into the default kubeconfig file. Ensure to accept the prompt to overide.
 
 ```
-sudo kubectl konfig import --save  [kubeconfig file]
+kubectl konfig import --save  [kubeconfig file]
 ```
-
-![eks](./images/p24_cli_09.png)
+(konfig import --save kubeconfig)
 
 3. Show all the contexts – Meaning all the clusters configured in your kubeconfig. If you have more than 1 Kubernetes clusters configured, you will see them all in the output.
 
@@ -491,7 +514,7 @@ sudo kubectl konfig import --save  [kubeconfig file]
 kubectl config get-contexts
 ```
 
-![eks](./images/p24_cli_10.png)
+![eks](./images/p24_cli_04.png)
 
 4. Set the current context to use for all kubectl and helm commands
 
@@ -499,7 +522,7 @@ kubectl config get-contexts
 kubectl config use-context [name of EKS cluster]
 ```
 
-![eks](./images/p24_cli_11.png)
+![eks](./images/p24_cli_05.png)
 
 5. Test that it is working without specifying the --kubeconfig flag
 
@@ -507,16 +530,13 @@ kubectl config use-context [name of EKS cluster]
 kubectl get po
 ```
 
-![eks](./images/p24_cli_12.png)
-
-
 6. Display the current context. This will let you know the context in which you are using to interact with Kubernetes.
 
 ```
 kubectl config current-context
 ```
 
-![eks](./images/p24_cli_13.png)
+![eks](./images/p24_cli_06.png)
 
 
 
@@ -539,44 +559,45 @@ kubectl create namespace [Namespace]
 ```
 *(kubectl create namespace k-space)*
 
+
 21. Install the Jenkins Helm chart with release name *jenkins-k*
 
 ```
-helm install [RELEASE_NAME] jenkins/jenkins [Namespace]
+helm install [RELEASE_NAME] jenkins/jenkins -n [Namespace]
 ```
-*(helm install jenkins-k jenkins/jenkins k-space)*
+*(helm install jenkins-k jenkins/jenkins -n k-space)*
 
 You should see an output like this
 
-![eks](./images/p24_cli_04.png)
+![eks](./images/p24_cli_07.png)
 
 
 22. Check the Helm deployment
 
 ``` 
-helm ls
+helm ls -n [namespace]
 ```
+*(helm ls -n k-space)*
 
-![eks](./images/p24_cli_05.png)
+![eks](./images/p24_cli_08.png)
 
 
 1.  Check the pods 
 
 ```
-kubectl get pods
+kubectl get pods -n [namespace]
 ```
 
-![eks](./images/p24_cli_06.png)
+![eks](./images/p24_cli_09.png)
 
 24. Describe the running pod
 
 ```
-kubectl describe pod jenkins-0 
+kubectl describe pod jenkins-k-0 -n [namespace]
 ```
+(kubectl describe pod jenkins-k-0 -n k-space)
 
-![eks](./images/p24_cli_07.png)
-
-25. Check the logs of the running pod. There is more than one container inside the pod, so we need to let kubectl know, which pod we are interested to see its log.
+25.  Check the logs of the running pod. There is more than one container inside the pod, so we need to let kubectl know, which pod we are interested to see its log.
 
 ```
 kubectl logs jenkins-0 -c jenkins 
