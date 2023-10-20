@@ -443,9 +443,10 @@ Note: Uncomment *backend* section of backend.tf, then run steps 13 and 14 again.
 aws eks update-kubeconfig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
 ```
 (aws eks update-kubeconfig --name tooling-app-eks --region eu-west-3 --kubeconfig kubeconfig)
-aws eks --region eu-west-3 update-kubeconfig --name tooling-app-eks
 
 ![eks](./images/p24_cli_03.png)
+
+
 
 
 ## INSTALL HELM
@@ -465,6 +466,97 @@ sudo apt-get install helm
 ```
 helm version
 ```
+
+
+## DEPLOY JENKINS WITH HELM
+
+18. Lets make use of publicly available charts from Artifact Hub to find packaged Jenkins applications as Helm Charts
+
+19. Add the repository to helm so that you can easily download and deploy
+
+```
+helm repo add jenkins https://charts.jenkins.io
+
+helm repo update 
+```
+
+20. Create namespace
+
+```
+kubectl create namespace [Namespace]
+```
+*(kubectl create namespace jenkins)*
+
+
+21. Install the Jenkins Helm chart with release name *jenkins-k*
+
+```
+helm install [RELEASE_NAME] jenkins/jenkins -n [Namespace]
+```
+*(helm install jenkins-k jenkins/jenkins -n jenkins)*
+
+You should see an output like this
+
+![eks](./images/p24_cli_07.png)
+
+
+22. Check the Helm deployment
+
+``` 
+helm ls -n [namespace]
+```
+*(helm ls -n k-space)*
+
+![eks](./images/p24_cli_08.png)
+
+
+23.  Check the pods 
+
+```
+kubectl get pods -n [namespace]
+```
+
+![eks](./images/p24_cli_09.png)
+
+24. Describe the running pod
+
+```
+kubectl describe pod jenkins-k-0 -n [namespace]
+```
+(kubectl describe pod jenkins-k-0 -n k-space)
+
+25.  Check the logs of the running pod. There is more than one container inside the pod, so we need to let kubectl know, which pod we are interested to see its log.
+
+```
+kubectl logs jenkins-k-0 -c jenkins 
+```
+
+![eks](./images/p24_cli_10.png)
+
+![eks](./images/p24_cli_10a.png)
+
+## ACCESS JENKINS UI
+
+Lets get access to the Jenkins UI without the --kubeconfig flag.
+  
+1. From step 21 above, get the password to the admin user
+
+```
+kubectl exec --namespace default -it svc/jenkins-k -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
+```
+
+2. Use port forwarding to access Jenkins from the UI
+  
+```  
+kubectl --namespace default port-forward svc/jenkins-k 9080:8080
+```
+
+  
+3. Go to the browser *localhost:9080* and authenticate with the username and password from number 1 above
+
+![eks](./images/p24_cli_11.png)
+
+![eks](./images/p24_web_02.png)
 
 
 ## INSTALLING kubectl plugin - konfig
@@ -493,9 +585,13 @@ Run this command to download and install krew:
 export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 ```
 
-and restart your shell.
+3. Apply the source command to reload the “.bashrc” file:
 
-3. Run kubectl krew to install konfig.
+```
+source .bashrc
+```
+
+4. Run kubectl krew to install konfig.
 
 ```
 kubectl krew install konfig
@@ -506,7 +602,7 @@ kubectl krew install konfig
 ```
 kubectl konfig import --save  [kubeconfig file]
 ```
-(konfig import --save kubeconfig)
+(kubectl konfig import --save kubeconfig)
 
 3. Show all the contexts – Meaning all the clusters configured in your kubeconfig. If you have more than 1 Kubernetes clusters configured, you will see them all in the output.
 
@@ -514,7 +610,7 @@ kubectl konfig import --save  [kubeconfig file]
 kubectl config get-contexts
 ```
 
-![eks](./images/p24_cli_04.png)
+![eks](./images/p24_cli_12.png)
 
 4. Set the current context to use for all kubectl and helm commands
 
@@ -522,7 +618,7 @@ kubectl config get-contexts
 kubectl config use-context [name of EKS cluster]
 ```
 
-![eks](./images/p24_cli_05.png)
+![eks](./images/p24_cli_13.png)
 
 5. Test that it is working without specifying the --kubeconfig flag
 
@@ -536,97 +632,7 @@ kubectl get po
 kubectl config current-context
 ```
 
-![eks](./images/p24_cli_06.png)
-
-
-
-## DEPLOY JENKINS WITH HELM
-
-18. Lets make use of publicly available charts from Artifact Hub to find packaged Jenkins applications as Helm Charts
-
-19. Add the repository to helm so that you can easily download and deploy
-
-```
-helm repo add jenkins https://charts.jenkins.io
-
-helm repo update 
-```
-
-20. Create namespace
-
-```
-kubectl create namespace [Namespace]
-```
-*(kubectl create namespace k-space)*
-
-
-21. Install the Jenkins Helm chart with release name *jenkins-k*
-
-```
-helm install [RELEASE_NAME] jenkins/jenkins -n [Namespace]
-```
-*(helm install jenkins-k jenkins/jenkins -n k-space)*
-
-You should see an output like this
-
-![eks](./images/p24_cli_07.png)
-
-
-22. Check the Helm deployment
-
-``` 
-helm ls -n [namespace]
-```
-*(helm ls -n k-space)*
-
-![eks](./images/p24_cli_08.png)
-
-
-1.  Check the pods 
-
-```
-kubectl get pods -n [namespace]
-```
-
-![eks](./images/p24_cli_09.png)
-
-24. Describe the running pod
-
-```
-kubectl describe pod jenkins-k-0 -n [namespace]
-```
-(kubectl describe pod jenkins-k-0 -n k-space)
-
-25.  Check the logs of the running pod. There is more than one container inside the pod, so we need to let kubectl know, which pod we are interested to see its log.
-
-```
-kubectl logs jenkins-0 -c jenkins 
-```
-
-![eks](./images/p24_cli_08.png)
-
-
-## ACCESS JENKINS UI
-
-Lets get access to the Jenkins UI without the --kubeconfig flag.
-  
-1. From step 21 above, get the password to the admin user
-
-```
-kubectl exec --namespace default -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
-```
-
-2. Use port forwarding to access Jenkins from the UI
-  
-```  
-kubectl --namespace default port-forward svc/jenkins 8080:8080
-```
-
-3. Go to the browser *localhost:8080* and authenticate with the username and password from number 1 above
-
 ![eks](./images/p24_cli_14.png)
-
-![eks](./images/p24_web_02.png)
 
 
 
@@ -642,9 +648,27 @@ helm repo update
 2. To install the chart with the release name *artifactory-k*:
 
 ```
-helm upgrade --install artifactory-k jfrog/artifactory --namespace k-space
+helm upgrade --install artifactory-k jfrog/artifactory 
 ```
-3. Get all the pods within the *k-space* namespace
+(helm upgrade --install artifactory-k jfrog/artifactory --kubeconfig kubeconfig)
+helm upgrade artifactory --install jfrog/jfrog-platform --kubeconfig kubeconfig
+
+![eks](./images/p24_cli_15.png)
+
+3. Set environmental variables:
+
+```
+export SERVICE_IP=$(kubectl get svc --namespace default artifactory-k-artifactory-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+echo http://$SERVICE_IP/
+```
+[export SERVICE_IP=$(kubectl get svc --namespace default artifactory-k-artifactory-nginx --kubeconfig kubeconfig -o jso
+npath='{.status.loadBalancer.ingress[0].ip}')]
+
+4. Open Artifactory in your browser
+
+
+
 
 ```
 kubectl get pods
@@ -652,37 +676,6 @@ kubectl get pods
 
 ![eks](./images/p24_cli_15.png)
 
-
-
-## Install Consul
-
-Add the HashiCorp Helm Repository:
-
- helm repo add hashicorp https://helm.releases.hashicorp.com
- "hashicorp" has been added to your repositories
-Copy
-Verify that you have access to the consul chart:
-
- helm search repo hashicorp/consul
-NAME                CHART VERSION   APP VERSION DESCRIPTION
-hashicorp/consul    1.0.1           1.14.1      Official HashiCorp Consul Chart
-Copy
-Before you install Consul on Kubernetes with Helm, ensure that the consul Kubernetes namespace does not exist. We recommend installing Consul on a dedicated namespace.
-
- kubectl get namespace
-NAME              STATUS   AGE
-default           Active   18h
-kube-node-lease   Active   18h
-kube-public       Active   18h
-kube-system       Active   18h
-Copy
-Install Consul on Kubernetes using Helm. The Helm chart does everything to set up your deployment: after installation, agents automatically form clusters, elect leaders, and run the necessary agents.
-
-Run the following command to install the latest version of Consul on Kubernetes with its default configuration.
-
- helm install consul hashicorp/consul --set global.name=consul --create-namespace --namespace consul
-Copy
-You can also install Consul on a dedicated namespace of your choosing by modifying the value of the -n flag for the Helm install.
 
 
 ## Installing Hashicorp Vault
@@ -856,7 +849,7 @@ Note from the status check that pods are running but that they are not ready (0/
 ![eks](./images/p24_cli_17.png)
 
 
-## Initialize and unseal one Vault pod
+**Initialize and unseal one Vault pod**
 
 Vault starts uninitialized and in the sealed state. Prior to initialization the Integrated Storage backend is not prepared to receive data.For Vault to authenticate with Kubernetes and manage secrets requires that that is initialized and unsealed.
 
@@ -915,6 +908,8 @@ Copy
 ```
 kubectl get nodes
 ```
+
+![eks](./images/p24_cli_21.png)
 
 NAME           STATUS   ROLES                  AGE   VERSION
 172.16.0.134   Ready    <none>                 16d   v1.21.6
@@ -988,6 +983,7 @@ Key       Value
 target    world
 
 
+
 ## Installing Prometheus
 
 1. Add Prometheus Helm chart repository
@@ -1011,6 +1007,7 @@ Default port for Prometheus dashboard is 9090. We can forward port to host by co
 ```
 kubectl port-forward &lt;prometheus-pod-name&gt; 9090 
 ```
+
 
 ## Installing Grafana
 
