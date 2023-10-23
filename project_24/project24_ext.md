@@ -24,7 +24,7 @@ To use the AWS S3 bucket as the cluster’s filestore, pass AWS S3 the below par
 ...
 
 
-helm upgrade artifactory --install jfrog/jfrog-platform -n jfrog -f artifactory-values.yaml--kubeconfig kubeconfig \
+helm upgrade artifactory --install jfrog/jfrog-platform -n jfrog -f artifactory-values.yaml --kubeconfig kubeconfig \
 --set artifactory.persistence.type=aws-s3 \
 --set artifactory.persistence.awsS3.endpoint=${AWS_S3_ENDPOINT} \
 --set artifactory.persistence.awsS3.region=${AWS_REGION} \
