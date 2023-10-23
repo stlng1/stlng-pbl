@@ -435,9 +435,7 @@ terraform apply
 
 Note: Uncomment *backend* section of backend.tf, then run steps 13 and 14 again.
 
-![eks](./images/p24_web_01a.png)
-
-15. Create kubeconfig file using awscli
+15.  Create kubeconfig file using awscli
 
 ```
 aws eks update-kubeconfig --name <cluster_name> --region <cluster_region> --kubeconfig kubeconfig
@@ -480,20 +478,20 @@ helm repo add jenkins https://charts.jenkins.io
 helm repo update 
 ```
 
-20. Create namespace
+20.  Create Namespace *k-space*
+    
+```
+kubectl create ns [NAMESPACE] 
+```
+*(kubectl create ns k-space --kubeconfig kubeconfig)*
+
+
+21.  Install the Jenkins Helm chart with release name *jenkins-k*
 
 ```
-kubectl create namespace [Namespace]
+helm install [RELEASE_NAME] jenkins/jenkins
 ```
-*(kubectl create namespace jenkins)*
-
-
-21. Install the Jenkins Helm chart with release name *jenkins-k*
-
-```
-helm install [RELEASE_NAME] jenkins/jenkins -n [Namespace]
-```
-*(helm install jenkins-k jenkins/jenkins -n jenkins)*
+*(helm install jenkins-k jenkins/jenkins -n k-space --kubeconfig kubeconfig)*
 
 You should see an output like this
 
@@ -505,7 +503,7 @@ You should see an output like this
 ``` 
 helm ls -n [namespace]
 ```
-*(helm ls -n k-space)*
+*(helm ls --kubeconfig kubeconfig)*
 
 ![eks](./images/p24_cli_08.png)
 
@@ -513,556 +511,50 @@ helm ls -n [namespace]
 23.  Check the pods 
 
 ```
-kubectl get pods -n [namespace]
+kubectl get pods
 ```
+*(kubectl get pods --kubeconfig kubeconfig)*
 
 ![eks](./images/p24_cli_09.png)
 
 24. Describe the running pod
 
 ```
-kubectl describe pod jenkins-k-0 -n [namespace]
+kubectl describe pod jenkins-k-0 
 ```
-(kubectl describe pod jenkins-k-0 -n k-space)
+*(kubectl describe pod jenkins-k-0 --kubeconfig kubeconfig)*
 
-25.  Check the logs of the running pod. There is more than one container inside the pod, so we need to let kubectl know, which pod we are interested to see its log.
+25. Check the logs of the running pod. There is more than one container inside the pod, so we need to let kubectl know, which pod we are interested to see its log.
 
 ```
-kubectl logs jenkins-k-0 -c jenkins 
+kubectl logs jenkins-k-0 -c jenkins
 ```
+
+*(kubectl logs jenkins-k-0 -c jenkins --kubeconfig kubeconfig)*
 
 ![eks](./images/p24_cli_10.png)
 
 ![eks](./images/p24_cli_10a.png)
 
+
 ## ACCESS JENKINS UI
 
 Lets get access to the Jenkins UI without the --kubeconfig flag.
   
-1. From step 21 above, get the password to the admin user
+26. From step 21 above, get the password to the admin user
 
 ```
 kubectl exec --namespace default -it svc/jenkins-k -c jenkins -- /bin/cat /run/secrets/chart-admin-password && echo
 ```
 
-2. Use port forwarding to access Jenkins from the UI
+27. Use port forwarding to access Jenkins from the UI
   
 ```  
 kubectl --namespace default port-forward svc/jenkins-k 9080:8080
 ```
-
   
-3. Go to the browser *localhost:9080* and authenticate with the username and password from number 1 above
+28. Go to the browser *localhost:9080* and authenticate with the username and password from number 1 above
 
 ![eks](./images/p24_cli_11.png)
 
 ![eks](./images/p24_web_02.png)
-
-
-## INSTALLING kubectl plugin - konfig
-
-In order to avoid calling the [kubeconfig file] everytime, we would introduce a kubectl plugin called [konfig] to select an active or default kubeconfig file. This is necessary because it is possible to have more than one cluster running and therefore more than one kubeconfig file in use. The default kubeconfig file is in the location ~/.kube/config. 
-
-1. Install a package manager for kubectl called **krew** to enable you to install plugins to extend the functionality of kubectl. Make sure that git is installed.
-
-Run this command to download and install krew:
-
-```
-(
-  set -x; cd "$(mktemp -d)" &&
-  OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
-  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
-  KREW="krew-${OS}_${ARCH}" &&
-  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
-  tar zxvf "${KREW}.tar.gz" &&
-  ./"${KREW}" install krew
-)
-```
-
-2. Add the $HOME/.krew/bin directory to your PATH environment variable. To do this, update your .bashrc or .zshrc file and append the following line:
-
-```
-export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
-```
-
-3. Apply the source command to reload the “.bashrc” file:
-
-```
-source .bashrc
-```
-
-4. Run kubectl krew to install konfig.
-
-```
-kubectl krew install konfig
-```
-
-4. Import the kubeconfig into the default kubeconfig file. Ensure to accept the prompt to overide.
-
-```
-kubectl konfig import --save  [kubeconfig file]
-```
-(kubectl konfig import --save kubeconfig)
-
-3. Show all the contexts – Meaning all the clusters configured in your kubeconfig. If you have more than 1 Kubernetes clusters configured, you will see them all in the output.
-
-```
-kubectl config get-contexts
-```
-
-![eks](./images/p24_cli_12.png)
-
-4. Set the current context to use for all kubectl and helm commands
-
-```
-kubectl config use-context [name of EKS cluster]
-```
-
-![eks](./images/p24_cli_13.png)
-
-5. Test that it is working without specifying the --kubeconfig flag
-
-```
-kubectl get po
-```
-
-6. Display the current context. This will let you know the context in which you are using to interact with Kubernetes.
-
-```
-kubectl config current-context
-```
-
-![eks](./images/p24_cli_14.png)
-
-
-
-## Installing Artifactory
-
-1. Add JFrog Helm chart repository
-   
-```
-helm repo add jfrog https://charts.jfrog.io
-helm repo update
-```
-   
-2. To install the chart with the release name *artifactory-k*:
-
-```
-helm upgrade --install artifactory-k jfrog/artifactory 
-```
-(helm upgrade --install artifactory-k jfrog/artifactory --kubeconfig kubeconfig)
-helm upgrade artifactory --install jfrog/jfrog-platform --kubeconfig kubeconfig
-
-![eks](./images/p24_cli_15.png)
-
-3. Set environmental variables:
-
-```
-export SERVICE_IP=$(kubectl get svc --namespace default artifactory-k-artifactory-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-
-echo http://$SERVICE_IP/
-```
-[export SERVICE_IP=$(kubectl get svc --namespace default artifactory-k-artifactory-nginx --kubeconfig kubeconfig -o jso
-npath='{.status.loadBalancer.ingress[0].ip}')]
-
-4. Open Artifactory in your browser
-
-
-
-
-```
-kubectl get pods
-```
-
-![eks](./images/p24_cli_15.png)
-
-
-
-## Installing Hashicorp Vault
-
-We will deploy a Vault cluster in High Availability (HA) mode using Hashicorp Consul and we will use AWS KMS to auto unseal our Vault.
-
-1. create the Kubernetes Secret with the IAM user's access key and secret key to authenticate to AWS.
-
-```
-kubectl create secret generic -n vault eks-creds \
-    --from-literal=AWS_ACCESS_KEY_ID="" \
-    --from-literal=AWS_SECRET_ACCESS_KEY=""
-```  
-
-2. Add Vault Helm chart repository
-   
-```
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo update
-helm search repo hashicorp/vault
-```
-
-3. Create *override.yaml* file to override default helm configurations:
-
-```
-# Vault Helm Chart Value Overrides
-global:
-  enabled: true
-
-injector:
-  enabled: true
-  # Use the Vault K8s Image https://github.com/hashicorp/vault-k8s/
-  image:
-    repository: "hashicorp/vault-k8s"
-    tag: "latest"
-
-  resources:
-      requests:
-        memory: 256Mi
-        cpu: 250m
-      limits:
-        memory: 256Mi
-        cpu: 250m
-
-server:
-  # This configures the Vault Statefulset to create a PVC for data
-  # storage when using the file or raft backend storage engines.
-  # See https://www.vaultproject.io/docs/configuration/storage/index.html to know more
-  dataStorage:
-    enabled: true
-    # Size of the PVC created
-    size: 20Gi
-    # Location where the PVC will be mounted.
-    mountPath: "/vault/data"
-    # Name of the storage class to use.  If null it will use the
-    # configured default Storage Class.
-    storageClass: null
-    # Access Mode of the storage device being used for the PVC
-    accessMode: ReadWriteOnce
-    # Annotations to apply to the PVC
-    annotations: {}
-
-  # Use the Enterprise Image
-  image:
-    repository: "hashicorp/vault"
-    tag: "latest"
-
-  # These Resource Limits are in line with node requirements in the
-  # Vault Reference Architecture for a Small Cluster
-  resources:
-    requests:
-      memory: 8Gi
-      cpu: 2000m
-    limits:
-      memory: 16Gi
-      cpu: 2000m
-
-  # For HA configuration and because we need to manually init the vault,
-  # we need to define custom readiness/liveness Probe settings
-  readinessProbe:
-    enabled: true
-    path: "/v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204"
-  livenessProbe:
-    enabled: true
-    path: "/v1/sys/health?standbyok=true"
-    initialDelaySeconds: 60
-
-  # This configures the Vault Statefulset to create a PVC for audit logs.
-  # See https://www.vaultproject.io/docs/audit/index.html to know more
-  auditStorage:
-    enabled: true
-
-  standalone:
-    enabled: false
-
-  # Authentication to AWS for auto unseal
-  extraSecretEnvironmentVars:
-    - envName: AWS_ACCESS_KEY_ID
-      secretName: eks-creds
-      secretKey: AWS_ACCESS_KEY_ID
-    - envName: AWS_SECRET_ACCESS_KEY
-      secretName: eks-creds
-      secretKey: AWS_SECRET_ACCESS_KEY
-
-  # Run Vault in "HA" mode.
-  ha:
-    enabled: true
-    replicas: 3
-    raft:
-      enabled: true
-      setNodeId: false
-
-      config: |
-        ui = true
-
-        listener "tcp" {
-          tls_disable = 1
-          address = "[::]:8200"
-          cluster_address = "[::]:8201"
-        }
-
-        seal "awskms" {
-          region     = "us-east-1"
-          kms_key_id = ""
-        }
-
-        storage "raft" {
-          path = "/vault/data"
-
-          retry_join {
-          leader_api_addr = "http://vault-0.vault-internal:8200"
-          }
-          retry_join {
-          leader_api_addr = "http://vault-1.vault-internal:8200"
-          }
-          retry_join {
-          leader_api_addr = "http://vault-2.vault-internal:8200"
-          }
-        }
-
-        service_registration "kubernetes" {}
-
-# Vault UI
-ui:
-  enabled: true
-  serviceType: "LoadBalancer"
-  serviceNodePort: null
-  externalPort: 8200
-```
-
-4. To install Vault Helm chart with the release name *vault-k*:
-
-```
-helm install vault-k hashicorp/vault \
-    -f ./override.yaml \
-    -n k-space
-```
-
-3. Get all the pods within the *k-space* namespace
-
-```
-kubectl get pods
-```
-
-![eks](./images/p24_cli_16.png)
-
-Note from the status check that pods are running but that they are not ready (0/1).
-
-4. Retrieve the status of Vault on the pod.
-   
-![eks](./images/p24_cli_17.png)
-
-
-**Initialize and unseal one Vault pod**
-
-Vault starts uninitialized and in the sealed state. Prior to initialization the Integrated Storage backend is not prepared to receive data.For Vault to authenticate with Kubernetes and manage secrets requires that that is initialized and unsealed.
-
-5. Initialize and unseal Vault
-   
-```
-kubectl exec --stdin=true --tty=true vault-0 -n k-space -- vault-k operator init
-```
-
-![eks](./images/p24_cli_18.png)
-
-The output displays the key shares and initial root key generated.
-
-
-Unseal Key 1: MBFSDepD9E6whREc6Dj+k3pMaKJ6cCnCUWcySJQymObb
-Unseal Key 2: zQj4v22k9ixegS+94HJwmIaWLBL3nZHe1i+b/wHz25fr
-Unseal Key 3: 7dbPPeeGGW3SmeBFFo04peCKkXFuuyKc8b2DuntA4VU5
-Unseal Key 4: tLt+ME7Z7hYUATfWnuQdfCEgnKA2L173dptAwfmenCdf
-Unseal Key 5: vYt9bxLr0+OzJ8m7c7cNMFj7nvdLljj0xWRbpLezFAI9
-
-Initial Root Token: s.zJNwZlRrqISjyBHFMiEca6GF
-
-6. Unseal the Vault server using the unseal keys until the key threshold is met.
-   
-```
-kubectl exec --stdin=true --tty=true vault-0 -n k-space -- vault-k operator unseal
-```
-
-When prompted, enter the Unseal Key value. Repeat process for next vault with a different unseal key value.
-
-![eks](./images/p24_cli_19.png)
-
-7. Once complete, Vault will be unsealed and the other Pods will be auto-unsealed with KMS. Validate that Vault is up and running.
-
-```
-kubectl get pods --selector='app.kubernetes.io/name=vault-k'
-```
-
-![eks](./images/p24_cli_20.png)
-
-
-7. Display all Vault services.
-
-```
-kubectl get services -n vault --selector='app.kubernetes.io/name=vault-ui'
-```
-
-![eks](./images/p24_cli_21.png)
-
-NAME       TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-vault-ui   NodePort   10.97.113.241   <none>        8200:30096/TCP   16d
-Copy
-
-8. Display the nodes of the cluster.
-
-```
-kubectl get nodes
-```
-
-![eks](./images/p24_cli_21.png)
-
-NAME           STATUS   ROLES                  AGE   VERSION
-172.16.0.134   Ready    <none>                 16d   v1.21.6
-172.16.0.53    Ready    <none>                 16d   v1.21.6
-172.16.0.63    Ready    control-plane,master   16d   v1.21.6
-172.16.0.97    Ready    control-plane,master   16d   v1.21.6
-
-
-8. Install the HashiCorp Vault.
-
-```
-wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-
-sudo apt update && sudo apt install vault
-```
-
-9. Set the VAULT_ADDR environment variable. Since we exposed Vault using NodePort, Vault will be available at 172.16.0.97:8200. Access it from your bastion host or VPN from the optional step.
-
-```
- export VAULT_ADDR='http://172.16.0.97:30096'
-```
-
-10. Set the VAULT_TOKEN environment variable value to the initial root token value generated during the Vault initialization.
-
-```
- export VAULT_TOKEN="s.zJNwZlRrqISjyBHFMiEca6GF"
-```
-
-11. Enable the kv secrets engine.
-
-```
- vault secrets enable -path=kv kv
-```
-
-Success! Enabled the kv secrets engine at: kv/
-
-
-12. Store some test data at kv/hello.
-
- ```
- vault kv put kv/hello target=world
-```
-
-
-Key                Value
----                -----
-created_time       2022-03-21T21:23:00.540998543Z
-custom_metadata    <nil>
-deletion_time      n/a
-destroyed          false
-version            1
-Copy
-Read the stored data to verify.
-
- vault kv get kv/hello
-
-======= Metadata =======
-Key                Value
----                -----
-created_time       2022-03-21T21:23:00.540998543Z
-custom_metadata    <nil>
-deletion_time      n/a
-destroyed          false
-version            1
-
-===== Data =====
-Key       Value
----       -----
-target    world
-
-
-
-## Installing Prometheus
-
-1. Add Prometheus Helm chart repository
-   
-```
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-kubectl get pods
-```
-
-2. To install prometheus Helm chart with the release name *prom-k*:
-
-```
-helm install prom-k prometheus-community/prometheus k-space
-```
-
-3. Access to Prometheus UI
-
-Default port for Prometheus dashboard is 9090. We can forward port to host by command and consequently access the dashboard in the browser on http://localhost:9090.
-
-```
-kubectl port-forward &lt;prometheus-pod-name&gt; 9090 
-```
-
-
-## Installing Grafana
-
-1. Add Grafana Helm chart repository
-   
-```
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
-```
-
-2. To install grafana Helm chart with the release name *grafana-k*:
-
-```
-helm install grafana-k grafana/grafana k-space
-```
-
-3. Check if everything is working fine and extract the external ip of node/ec2 instance:
-
-```
-kubectl get all -n grafana
-```
-
-4. Default port for grafana dashboard is 3000. We can forward port to host by command 
-
-```
-kubectl port-forward &lt;grafana-pod-name&gt; 3000  
-```
-
-5. Access the dashboard in the browser on http://<external_ip>:3000.
-
-
-
-## Elasticsearch ELK using ECK
-
-1. Add the Elastic Helm charts repo: 
-   
-```
-helm repo add elastic https://helm.elastic.co
-helm repo update
-```
-
-2. To install Elasticsearch using the eck-elasticsearch Helm Chart directly with the release name *elastic-k*:
-
-```
-helm install elastic-k elastic/eck-elasticsearch -n k-space 
-```
-
-3. Check if everything is working fine:
-
-```
-kubectl get pods
-```
-
-4. Once you successfully installed Elasticsearch, forward it to port 9200:
-
-```
-kubectl port-forward svc/elasticsearch-master 9200
-```
