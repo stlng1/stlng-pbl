@@ -23,14 +23,42 @@ To use the AWS S3 bucket as the cluster’s filestore, pass AWS S3 the below par
 --set artifactory.persistence.awsS3.roleName=${AWS_ROLE_NAME} \
 ...
 
+1. Set environmental variables:
 
+export AWS_S3_ENDPOINT={copy_from_console}
+
+echo ${AWS_S3_ENDPOINT}
+
+export AWS_REGION=eu-west-3
+
+echo ${AWS_REGION}
+
+export AWS_ACCESS_KEY_ID={insert_access_key_id}
+
+echo ${AWS_ACCESS_KEY_ID}
+
+export AWS_SECRET_ACCESS_KEY={insert_access_key_secret}
+
+echo ${AWS_SECRET_ACCESS_KEY}
+
+
+2. Install artifactory:
+   
 helm upgrade artifactory --install jfrog/jfrog-platform -n jfrog -f artifactory-values.yaml --kubeconfig kubeconfig \
 --set artifactory.persistence.type=aws-s3 \
 --set artifactory.persistence.awsS3.endpoint=${AWS_S3_ENDPOINT} \
 --set artifactory.persistence.awsS3.region=${AWS_REGION} \
---set artifactory.persistence.awsS3.roleName=${AWS_ROLE_NAME} \
+--set artifactory.persistence.awsS3.identity=${AWS_ACCESS_KEY_ID} \
+--set artifactory.persistence.awsS3.credential=${AWS_SECRET_ACCESS_KEY} \
 
-1. Set environmental variables:
+<!-- --set artifactory.persistence.type=aws-s3 \
+--set artifactory.persistence.awsS3.endpoint=${AWS_S3_ENDPOINT} \
+--set artifactory.persistence.awsS3.region=${AWS_REGION} \
+--set artifactory.persistence.awsS3.roleName=${AWS_ROLE_NAME} \ -->
+
+
+
+3. get service ip
 
 ```
 export SERVICE_IP=$(kubectl get svc --namespace default artifactory-k-artifactory-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
